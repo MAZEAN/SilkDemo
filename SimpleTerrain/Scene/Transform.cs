@@ -4,23 +4,74 @@ using System.Numerics;
 
 public class Transform
 {
-    //A transform abstraction.
-    //For a transform we need to have a position a scale and a rotation,
-    //depending on what application you are creating, the type for these may vary.
+    private Vector3 _position = Vector3.Zero;
+    private Vector3 _scale = Vector3.One;
+    private Quaternion _rotation = Quaternion.Identity;
+    private Matrix4x4 _cachedMatrix;
+    private bool _dirty = true;
 
-    //Here we have chosen a vec3 for position, float for scale and quaternion for rotation,
-    //as that is the most normal to go with.
-    //Another example could have been vec3, vec3, vec4, so the rotation is an axis angle instead of a quaternion
+    public Transform? Parent { get; set; }
 
-    public Vector3 Position { get; set; } = new Vector3(0, 0, 0);
+    public Vector3 Position
+    {
+        get => _position;
+        set { _position = value; _dirty = true; }
+    }
 
-    public float Scale { get; set; } = 1f;
+    public Vector3 Scale
+    {
+        get => _scale;
+        set { _scale = value; _dirty = true; }
+    }
 
-    public Quaternion Rotation { get; set; } = Quaternion.Identity;
+    public Quaternion Rotation
+    {
+        get => _rotation;
+        set { _rotation = Quaternion.Normalize(value); _dirty = true; }
+    }
 
-    //Note: The order here does matter.
-    public Matrix4x4 ViewMatrix =>
-        Matrix4x4.CreateScale(Scale) *
-        Matrix4x4.CreateFromQuaternion(Rotation) *
-        Matrix4x4.CreateTranslation(Position);
+    public Matrix4x4 LocalMatrix
+    {
+        get
+        {
+            if (_dirty)
+            {
+                _cachedMatrix =
+                    Matrix4x4.CreateScale(_scale) *
+                    Matrix4x4.CreateFromQuaternion(_rotation) *
+                    Matrix4x4.CreateTranslation(_position);
+                _dirty = false;
+            }
+            return _cachedMatrix;
+        }
+    }
+
+    public Matrix4x4 WorldMatrix =>
+        Parent != null
+            ? LocalMatrix * Parent.WorldMatrix
+            : LocalMatrix;
+
+    public void Translate(Vector3 delta)
+    {
+        Position += delta;
+    }
+
+    public void RotateLocal(Quaternion delta)
+    {
+        Rotation = delta * _rotation;
+    }
+
+    public void RotateWorld(Quaternion delta)
+    {
+        Rotation = _rotation * delta;
+    }
+
+    public void SetEulerAngles(float pitchDeg, float yawDeg, float rollDeg)
+    {
+        Rotation = Quaternion.CreateFromYawPitchRoll(
+            float.DegreesToRadians(yawDeg),
+            float.DegreesToRadians(pitchDeg),
+            float.DegreesToRadians(rollDeg)
+        );
+    }
 }

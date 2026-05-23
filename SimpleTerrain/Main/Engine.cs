@@ -4,39 +4,34 @@ using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using Silk.NET.Maths;
 using System.Numerics;
-
 using Config;
 using Scene;
 using Rendering;
+using Input;
 
 public class Engine
 {
     private IWindow _window = null!;
     private GL _gl = null!;
-
     private Camera _camera = null!;
     private AppConfig _config = null!;
-
     private Renderer _renderer = null!;
     private InputSystem _input = null!;
-
-    private Model _model = null!;
-    private GLShader _shader = null!;
-    private GLTexture _texture = null!;
+    private Scene _scene = null!;
 
     public void Run()
     {
         _config = new AppConfig();
+        _scene  = new Scene();
 
         var options = CreateWindowOptions();
-
         _window = Window.Create(options);
 
-        _window.Load += OnLoad;
-        _window.Update += OnUpdate;
-        _window.Render += OnRender;
+        _window.Load              += OnLoad;
+        _window.Update            += OnUpdate;
+        _window.Render            += OnRender;
         _window.FramebufferResize += OnResize;
-        _window.Closing += OnClose;
+        _window.Closing           += OnClose;
 
         _window.Run();
         _window.Dispose();
@@ -45,50 +40,45 @@ public class Engine
     private WindowOptions CreateWindowOptions()
     {
         var options = WindowOptions.Default;
-
-        options.Size = new Vector2D<int>(
-            _config.Window.Width,
-            _config.Window.Height
-        );
-
-        options.Title = _config.Window.Title;
-        options.VSync = _config.Window.EnableVSync;
+        options.Size    = new Vector2D<int>(_config.Window.Width, _config.Window.Height);
+        options.Title   = _config.Window.Title;
+        options.VSync   = _config.Window.EnableVSync;
         options.Samples = _config.Window.Samples;
-
         return options;
     }
 
     private void OnLoad()
     {
-        InitializeOpenGl();
+        try
+        {
+            InitializeOpenGL();
+            _camera = new Camera(
+                _config.Camera,
+                new Vector3(0f, 0f, 3f),
+                new Vector3(0f, 0f, -1f),
+                Vector3.UnitY,
+                -90f,
+                0f
+            );
+            _camera.SetAspectRatio(_window.FramebufferSize);
 
-        var size = _window.FramebufferSize;
+            _renderer = new Renderer(_gl, _camera, _config);
+            _input    = new InputSystem(_window, _camera, _config);
+            _input.Initialize();
 
-        _camera = new Camera(
-            _config.Camera,
-            new Vector3(0f, 0f, 3f),
-            new Vector3(0f, 0f, -1f),
-            Vector3.UnitY,
-            -90f,
-            0f
-        );
-
-        _camera.SetAspectRatio(size);
-
-        _renderer = new Renderer(_gl, _camera, _config);
-        _input = new InputSystem(_window, _camera, _config);
-        
-        _input.Initialize();
-        
-        _shader = new GLShader(_gl, "Assets/Shaders/shader.vert", "Assets/Shaders/shader.frag");
-        _texture = new GLTexture(_gl, "Assets/Textures/wall.jpg");
-        _model = new Model(_gl, "Assets/Models/cube.model");
+            SceneLoader.Load("Assets/scene.json", _scene, _gl);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"OnLoad failed: {e}");
+            throw;
+        }
     }
-    
-    private void InitializeOpenGl()
+
+    private void InitializeOpenGL()
     {
         _gl = GL.GetApi(_window);
-        
+        _gl.ClearColor(0.2f, 0.2f, 0.2f, 1.0f);
         _gl.Enable(EnableCap.DepthTest);
         _gl.Enable(GLEnum.Multisample);
         _gl.Viewport(_window.FramebufferSize);
@@ -96,17 +86,9 @@ public class Engine
         _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
     }
 
-    private void OnUpdate(double deltaTime)
-    {
-        float dt = (float) deltaTime;
+    private void OnUpdate(double deltaTime) => _input.UpdateMovement((float) deltaTime);
 
-        _input.UpdateMovement(dt);
-    }
-
-    private void OnRender(double deltaTime)
-    {
-        _renderer.Render(_model, _shader, _texture, (float) deltaTime);
-    }
+    private void OnRender(double deltaTime) => _renderer.Render(_scene, (float) deltaTime);
 
     private void OnResize(Vector2D<int> size)
     {
@@ -114,10 +96,5 @@ public class Engine
         _camera.SetAspectRatio(size);
     }
 
-    private void OnClose()
-    {
-        _model?.Dispose();
-        _shader?.Dispose();
-        _texture?.Dispose();
-    }
+    private void OnClose() => _scene.Dispose();
 }

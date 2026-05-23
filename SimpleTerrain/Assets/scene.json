@@ -1,0 +1,14 @@
+{
+  "entities": [
+    {
+      "name": "Cube",
+      "model":   "Assets/Models/cube.obj",
+      "texture": "Assets/Textures/wall.jpg",
+      "material": "Assets/Materials/cube.mat",
+      "shader":  "Assets/Shaders/shader",
+      "position": [0, 0, 0],
+      "scale":    [1, 1, 1],
+      "rotation": [0, 45, 0]
+    }
+  ]
+}

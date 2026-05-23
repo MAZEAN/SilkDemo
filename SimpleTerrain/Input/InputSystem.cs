@@ -1,4 +1,4 @@
-namespace SimpleTerrain.Main;
+namespace SimpleTerrain.Input;
 
 using Silk.NET.Input;
 using Silk.NET.Windowing;
@@ -7,7 +7,6 @@ using System.Numerics;
 
 using Config;
 using Scene;
-using Input;
 
 public class InputSystem
 {
