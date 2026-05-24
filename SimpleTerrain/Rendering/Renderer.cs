@@ -20,8 +20,6 @@ public class Renderer
 
     public void Render(Scene scene, float deltaTime)
     {
-        _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
         var view       = _camera.GetViewMatrix();
         var projection = _camera.GetProjectionMatrix();
 

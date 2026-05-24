@@ -27,6 +27,10 @@ public class Mesh : IDisposable
         _vao.VertexAttributePointer(0, 3, VertexAttribPointerType.Float, 8, 0); // position
         _vao.VertexAttributePointer(1, 3, VertexAttribPointerType.Float, 8, 3); // normal
         _vao.VertexAttributePointer(2, 2, VertexAttribPointerType.Float, 8, 6); // uv
+        
+        _gl.BindVertexArray(0);
+        _gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
+        _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
     }
 
     public void Bind() => _vao.Bind();

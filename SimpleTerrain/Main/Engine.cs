@@ -18,6 +18,7 @@ public class Engine
     private Renderer _renderer = null!;
     private InputSystem _input = null!;
     private Scene _scene = null!;
+    private GridRenderer _grid = null!;
 
     public void Run()
     {
@@ -67,6 +68,7 @@ public class Engine
             _input.Initialize();
 
             SceneLoader.Load("Assets/scene.json", _scene, _gl);
+            _grid = new GridRenderer(_gl);
         }
         catch (Exception e)
         {
@@ -88,13 +90,23 @@ public class Engine
 
     private void OnUpdate(double deltaTime) => _input.UpdateMovement((float) deltaTime);
 
-    private void OnRender(double deltaTime) => _renderer.Render(_scene, (float) deltaTime);
+    private void OnRender(double deltaTime)
+    {
+        _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        
+        _renderer.Render(_scene, (float) deltaTime);
+        _grid.Render(_camera);
+    }
 
     private void OnResize(Vector2D<int> size)
     {
         _gl.Viewport(size);
         _camera.SetAspectRatio(size);
     }
-
-    private void OnClose() => _scene.Dispose();
+    
+    private void OnClose()
+    {
+        _scene.Dispose();
+        //_grid.Dispose();
+    }
 }
