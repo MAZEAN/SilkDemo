@@ -1,7 +1,9 @@
 namespace SimpleTerrain.Rendering;
+
 using Silk.NET.OpenGL;
 using Config;
-using SimpleTerrain.Scene;
+using Scene;
+using System.Numerics;
 
 public class Renderer
 {
@@ -32,7 +34,10 @@ public class Renderer
             foreach (var entity in entities)
             {
                 entity.Material.Texture?.Bind();
+                
                 shader.SetUniform("uModel", entity.Transform.WorldMatrix);
+                shader.SetUniform("uUvScale",  entity.Material.UvScale);
+                shader.SetUniform("uUvOffset", entity.Material.UvOffset);
 
                 foreach (var mesh in entity.Model.Meshes)
                 {

@@ -76,6 +76,14 @@ public class GLShader : IDisposable
         }
         _gl.Uniform3(location, value.X, value.Y, value.Z);
     }
+    
+    public void SetUniform(string name, Vector2 value)
+    {
+        int location = _gl.GetUniformLocation(_handle, name);
+        if (location == -1)
+            throw new Exception($"Uniform '{name}' not found in shader.");
+        _gl.Uniform2(location, value.X, value.Y);
+    }
 
     public void Dispose()
     {

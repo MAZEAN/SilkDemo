@@ -1,8 +1,7 @@
 namespace SimpleTerrain.Scene;
-
 using System.Text.Json;
 using System.Numerics;
-using Rendering;
+using SimpleTerrain.Rendering;
 using Silk.NET.OpenGL;
 
 public static class SceneLoader
@@ -45,7 +44,13 @@ public static class SceneLoader
 
         var shader  = new GLShader(gl, def.Shader + ".vert", def.Shader + ".frag");
         var texture = def.Texture != null ? new GLTexture(gl, def.Texture) : null;
-        return new Material(shader, texture);
+
+        return new Material(shader, texture)
+        {
+            Color    = new Vector4(def.Color[0],    def.Color[1],    def.Color[2],    def.Color[3]),
+            UvScale  = new Vector2(def.UvScale[0],  def.UvScale[1]),
+            UvOffset = new Vector2(def.UvOffset[0], def.UvOffset[1])
+        };
     }
 
     private static Material LoadInlineMaterial(GL gl, EntityDefinition e)
@@ -55,6 +60,7 @@ public static class SceneLoader
 
         var shader  = new GLShader(gl, e.Shader + ".vert", e.Shader + ".frag");
         var texture = e.Texture != null ? new GLTexture(gl, e.Texture) : null;
+
         return new Material(shader, texture);
     }
 }

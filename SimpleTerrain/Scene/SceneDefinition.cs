@@ -45,4 +45,10 @@ public class MaterialDefinition
 
     [JsonPropertyName("color")]
     public float[] Color { get; set; } = [1f, 1f, 1f, 1f];
+
+    [JsonPropertyName("uvScale")]
+    public float[] UvScale { get; set; } = [1f, 1f];
+
+    [JsonPropertyName("uvOffset")]
+    public float[] UvOffset { get; set; } = [0f, 0f];
 }
