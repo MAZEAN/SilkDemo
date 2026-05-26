@@ -70,4 +70,9 @@ public class Camera
     {
         return Matrix4x4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(_zoom), _aspectRatio, _config.Near, _config.Far);
     }
+
+    public Vector3 GetPosition()
+    {
+        return _position;
+    }
 }

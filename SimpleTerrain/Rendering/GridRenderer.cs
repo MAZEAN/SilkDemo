@@ -33,6 +33,7 @@ public class GridRenderer : IDisposable
         _shader.Use();
         _shader.SetUniform("uView",       camera.GetViewMatrix());
         _shader.SetUniform("uProjection", camera.GetProjectionMatrix());
+        _shader.SetUniform("uCameraPos",   camera.GetPosition()); // add this
 
         _mesh.Bind();
         unsafe
