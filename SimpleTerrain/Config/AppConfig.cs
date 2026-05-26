@@ -1,5 +1,8 @@
 namespace SimpleTerrain.Config;
 
+using System.Numerics;
+using Silk.NET.Windowing;
+
 public class AppConfig
 {
     public WindowConfig Window { get; init; } = new();
@@ -19,9 +22,23 @@ public class CameraConfig
 
 public class WindowConfig
 {
-    public int Width { get; init; } = 800;
-    public int Height { get; init; } = 600;
+    
     public string Title { get; init; } = "SimpleTerrain";
-    public bool EnableVSync { get; init; } = false;
+    public WindowState WindowState = WindowState.Maximized;
+    public IMonitor PrimaryMonitor = FindPrimaryMonitor();
+    public bool EnableVSync { get; init; } = true;
     public int Samples { get; init; } = 4;
+    public Vector4 ClearColor { get; init; } = new(0.2f, 0.2f, 0.2f, 1.0f);
+
+    private static IMonitor FindPrimaryMonitor()
+    {
+        var monitor = Monitor.GetMonitors(null)
+            .OrderByDescending(m =>
+            {
+                var r = m.VideoMode.Resolution;
+                return r.HasValue ? r.Value.X * r.Value.Y : 0;
+            })
+            .First();
+        return monitor;
+    }
 }

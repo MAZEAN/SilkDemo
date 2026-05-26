@@ -37,6 +37,7 @@ public class InputSystem
         {
             mouse.Cursor.CursorMode = CursorMode.Raw;
             mouse.MouseMove += _cameraController.OnMouseMove;
+            mouse.Scroll += _cameraController.OnMouseWheel;
         }
     }
     
@@ -47,22 +48,22 @@ public class InputSystem
         if (_keyboard.IsKeyPressed(Key.W))
         {
             //Move forwards
-            _camera.UpdatePosition(_camera.Front * moveSpeed);
+            _camera.UpdatePosition(_camera.Forward * moveSpeed);
         }
         if (_keyboard.IsKeyPressed(Key.S))
         {
             //Move backwards
-            _camera.UpdatePosition(_camera.Front * -moveSpeed);
+            _camera.UpdatePosition(_camera.Forward * -moveSpeed);
         }
         if (_keyboard.IsKeyPressed(Key.A))
         {
             //Move left
-            _camera.UpdatePosition(Vector3.Normalize(Vector3.Cross(_camera.Front, _camera.Up)) * -moveSpeed);
+            _camera.UpdatePosition(Vector3.Normalize(Vector3.Cross(_camera.Forward, _camera.Up)) * -moveSpeed);
         }
         if (_keyboard.IsKeyPressed(Key.D))
         {
             //Move right
-            _camera.UpdatePosition(Vector3.Normalize(Vector3.Cross(_camera.Front, _camera.Up)) * moveSpeed);
+            _camera.UpdatePosition(Vector3.Normalize(Vector3.Cross(_camera.Forward, _camera.Up)) * moveSpeed);
         }
         if (_keyboard.IsKeyPressed(Key.Space))
         {

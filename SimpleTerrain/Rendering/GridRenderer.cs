@@ -30,9 +30,6 @@ public class GridRenderer : IDisposable
     // GridRenderer.cs
     public void Render(Camera camera)
     {
-        _gl.Enable(EnableCap.Blend);
-        _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-
         _shader.Use();
         _shader.SetUniform("uView",       camera.GetViewMatrix());
         _shader.SetUniform("uProjection", camera.GetProjectionMatrix());
@@ -42,10 +39,6 @@ public class GridRenderer : IDisposable
         {
             _gl.DrawElements(PrimitiveType.Triangles, 6, DrawElementsType.UnsignedInt, (void*)0);
         }
-
-        // restore to match InitializeOpenGL state
-        _gl.Enable(EnableCap.Blend);
-        _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
     }
 
     public void Dispose()

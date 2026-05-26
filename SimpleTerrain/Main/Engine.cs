@@ -19,6 +19,9 @@ public class Engine
     private InputSystem _input = null!;
     private Scene _scene = null!;
     private GridRenderer _grid = null!;
+    
+    private int _frameCount = 0;
+    private double _fpsTimer = 0;
 
     public void Run()
     {
@@ -41,9 +44,19 @@ public class Engine
     private WindowOptions CreateWindowOptions()
     {
         var options = WindowOptions.Default;
-        options.Size    = new Vector2D<int>(_config.Window.Width, _config.Window.Height);
-        options.Title   = _config.Window.Title;
-        options.VSync   = _config.Window.EnableVSync;
+        var monitor = Monitor.GetMonitors(null)
+            .OrderByDescending(m =>
+            {
+                var r = m.VideoMode.Resolution;
+                return r.HasValue ? r.Value.X * r.Value.Y : 0;
+            })
+            .First();
+
+        options.WindowState = WindowState.Maximized;
+        options.Position = monitor.Bounds.Center;
+        options.Size = monitor.Bounds.Size;
+        options.Title = _config.Window.Title;
+        options.VSync = _config.Window.EnableVSync;
         options.Samples = _config.Window.Samples;
         return options;
     }
@@ -80,15 +93,65 @@ public class Engine
     private void InitializeOpenGL()
     {
         _gl = GL.GetApi(_window);
-        _gl.ClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+
+        // background color when clearing the frame
+        var color = _config.Window.ClearColor;
+        _gl.ClearColor(color.X, color.Y, color.Z, color.W);
+
+        // discard fragments that are behind already-drawn geometry
         _gl.Enable(EnableCap.DepthTest);
+        _gl.DepthFunc(DepthFunction.Less);
+
+        // smooth jagged edges — sample count set in WindowConfig.Samples
         _gl.Enable(GLEnum.Multisample);
+
+        // define the render region — important for high-DPI displays
         _gl.Viewport(_window.FramebufferSize);
+
+        // enable alpha transparency
         _gl.Enable(EnableCap.Blend);
-        _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+
+        // blend color and alpha channels separately:
+        // color: srcAlpha * src + (1 - srcAlpha) * dst  — standard transparency
+        // alpha: 1 * src + 0 * dst                      — preserve source alpha
+        _gl.BlendFuncSeparate(
+            BlendingFactor.SrcAlpha,
+            BlendingFactor.OneMinusSrcAlpha,
+            BlendingFactor.One,
+            BlendingFactor.Zero
+        );
+
+        // skip rendering triangles facing away from camera — halves fragment work
+        // requires consistent counter-clockwise winding in exported meshes (Blender default)
+        _gl.Enable(EnableCap.CullFace);
+        _gl.CullFace(TriangleFace.Back);
+        _gl.FrontFace(FrontFaceDirection.Ccw);
+
+        // needed if you add skybox or reflections later — removes seams on cubemap edges
+        _gl.Enable(EnableCap.TextureCubeMapSeamless);
+
+        // default fill mode — change to PolygonMode.Line for wireframe debugging
+        _gl.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
     }
 
-    private void OnUpdate(double deltaTime) => _input.UpdateMovement((float) deltaTime);
+    private void OnUpdate(double deltaTime)
+    {
+        _input.UpdateMovement((float)deltaTime);
+
+        _fpsTimer   += deltaTime;
+        _frameCount += 1;
+
+        if (_fpsTimer >= 1.0)
+        {
+            var fps = _frameCount / _fpsTimer;
+            var ms  = 1000.0 / fps;
+
+            _window.Title = $"{_config.Window.Title} — {fps:F1} FPS ({ms:F2} ms)";
+
+            _frameCount = 0;
+            _fpsTimer   = 0;
+        }
+    }
 
     private void OnRender(double deltaTime)
     {
@@ -107,6 +170,6 @@ public class Engine
     private void OnClose()
     {
         _scene.Dispose();
-        //_grid.Dispose();
+        _grid.Dispose();
     }
 }

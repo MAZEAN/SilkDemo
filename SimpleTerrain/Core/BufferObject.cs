@@ -14,8 +14,8 @@ public class BufferObject<TDataType> : IDisposable
     {
         _gl = gl;
         _bufferType = bufferType;
-
         _handle = _gl.GenBuffer();
+        
         Bind();
         fixed (void* d = data)
         {

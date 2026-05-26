@@ -32,4 +32,9 @@ public class CameraController
 
         _camera.ModifyDirection(xOffset, yOffset);
     }
+    
+    public void OnMouseWheel(IMouse mouse, ScrollWheel scrollWheel)
+    {
+        _camera.AdjustZoom(-scrollWheel.Y * _config.ZoomSensitivity);
+    }
 }

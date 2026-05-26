@@ -2,10 +2,10 @@ namespace SimpleTerrain.Core;
 
 using System;
 
-public class MathHelper
+public static class MathHelper
 {
     public static float DegreesToRadians(float degrees)
     {
-        return MathF.PI / 180f * degrees;
+        return degrees * (MathF.PI / 180f);
     }
 }

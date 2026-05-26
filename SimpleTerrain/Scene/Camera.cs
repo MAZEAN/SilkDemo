@@ -8,68 +8,66 @@ using Core;
 
 public class Camera
 {
-    public CameraConfig Config { get; private set; }
-    public Vector3 Position { get; private set; }
-    public Vector3 Front { get; set; }
-    public Vector3 Up { get; private set; }
-    public float AspectRatio { get; private set; }
-    public float Yaw { get; private set; }
-    public float Pitch { get; private set; }
-    public float Zoom { get; private set; }
+    private readonly CameraConfig _config;
+    private Vector3 _position; 
     
-    public float LookSensitivityX { get; private set; } = 0.1f;
-    public float LookSensitivityY { get; private set; } = 0.1f;
+    public Vector3 Forward { get; private set; }
+    public Vector3 Up { get; private set; }
+    
+    private float _aspectRatio;
+    private float _yaw;
+    private float _pitch;
+    private float _zoom;
 
-    public Camera(CameraConfig config, Vector3 position, Vector3 front, Vector3 up, float yaw, float pitch)
+    public Camera(CameraConfig config, Vector3 position, Vector3 forward, Vector3 up, float yaw, float pitch)
     {
-        Config = config;
-        Position = position;
-        Front = front;
+        _config = config;
+        _position = position;
+        Forward = forward;
         Up = up;
-        Yaw = yaw;
-        Pitch = pitch;
-        Zoom = Config.FOV;
+        _yaw = yaw;
+        _pitch = pitch;
+        _zoom = _config.FOV;
     }
 
-    public void AdjustZoom(float zoomAmount)
+    public void AdjustZoom(float zoomDelta)
     {
-        //We don't want to be able to zoom in too close or too far away so clamp to these values
-        Zoom = Math.Clamp(Zoom - zoomAmount, 1.0f, Config.FOV);
+        _zoom = Math.Clamp(_zoom + zoomDelta, 1.0f, _config.FOV);
     }
 
     public void SetAspectRatio(Vector2D<int> newSize)
     {
-        AspectRatio = (float) newSize.X / newSize.Y;
+        _aspectRatio = (float) newSize.X / newSize.Y;
     }
 
     public void UpdatePosition(Vector3 delta)
     {
-        Position += delta;
+        _position += delta;
     }
 
     public void ModifyDirection(float xOffset, float yOffset)
     {
-        Yaw += xOffset;
-        Pitch -= yOffset;
+        _yaw += xOffset;
+        _pitch -= yOffset;
 
-        //We don't want to be able to look behind us by going over our head or under our feet so make sure it stays within these bounds
-        Pitch = Math.Clamp(Pitch, -89f, 89f);
+        // We don't want to be able to look behind us by going over our head or under our feet so make sure it stays within these bounds
+        _pitch = Math.Clamp(_pitch, -89f, 89f);
 
         var cameraDirection = Vector3.Zero;
-        cameraDirection.X = MathF.Cos(MathHelper.DegreesToRadians(Yaw)) * MathF.Cos(MathHelper.DegreesToRadians(Pitch));
-        cameraDirection.Y = MathF.Sin(MathHelper.DegreesToRadians(Pitch));
-        cameraDirection.Z = MathF.Sin(MathHelper.DegreesToRadians(Yaw)) * MathF.Cos(MathHelper.DegreesToRadians(Pitch));
+        cameraDirection.X = MathF.Cos(MathHelper.DegreesToRadians(_yaw)) * MathF.Cos(MathHelper.DegreesToRadians(_pitch));
+        cameraDirection.Y = MathF.Sin(MathHelper.DegreesToRadians(_pitch));
+        cameraDirection.Z = MathF.Sin(MathHelper.DegreesToRadians(_yaw)) * MathF.Cos(MathHelper.DegreesToRadians(_pitch));
 
-        Front = Vector3.Normalize(cameraDirection);
+        Forward = Vector3.Normalize(cameraDirection);
     }
 
     public Matrix4x4 GetViewMatrix()
     {
-        return Matrix4x4.CreateLookAt(Position, Position + Front, Up);
+        return Matrix4x4.CreateLookAt(_position, _position + Forward, Up);
     }
 
     public Matrix4x4 GetProjectionMatrix()
     {
-        return Matrix4x4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(Zoom), AspectRatio, Config.Near, Config.Far);
+        return Matrix4x4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(_zoom), _aspectRatio, _config.Near, _config.Far);
     }
 }

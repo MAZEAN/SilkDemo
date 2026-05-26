@@ -1,8 +1,9 @@
 namespace SimpleTerrain.Rendering;
+
 using Silk.NET.Assimp;
 using Silk.NET.OpenGL;
 using System.Numerics;
-using SimpleTerrain.Core;
+using Core;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 
 public class Model : IDisposable
@@ -17,7 +18,7 @@ public class Model : IDisposable
     public Model(GL gl, string path)
     {
         _gl     = gl;
-        _assimp = Silk.NET.Assimp.Assimp.GetApi();
+        _assimp = Assimp.GetApi();
         LoadModel(path);
     }
 
@@ -31,7 +32,7 @@ public class Model : IDisposable
         ));
 
         if (scene == null
-            || scene->MFlags == Silk.NET.Assimp.Assimp.SceneFlagsIncomplete
+            || scene->MFlags == Assimp.SceneFlagsIncomplete
             || scene->MRootNode == null)
         {
             throw new Exception(_assimp.GetErrorStringS());
@@ -41,7 +42,7 @@ public class Model : IDisposable
         ProcessNode(scene->MRootNode, scene);
     }
 
-    private unsafe void ProcessNode(Node* node, Silk.NET.Assimp.Scene* scene)
+    private unsafe void ProcessNode(Node* node, Scene* scene)
     {
         for (var i = 0; i < node->MNumMeshes; i++)
         {
@@ -55,7 +56,7 @@ public class Model : IDisposable
         }
     }
 
-    private unsafe Mesh ProcessMesh(AssimpMesh* mesh, Silk.NET.Assimp.Scene* scene)
+    private unsafe Mesh ProcessMesh(AssimpMesh* mesh, Scene* scene)
     {
         var vertices = new List<Vertex>();
         var indices  = new List<uint>();
