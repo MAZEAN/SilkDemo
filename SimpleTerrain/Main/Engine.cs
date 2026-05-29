@@ -20,8 +20,8 @@ public class Engine
     private Scene _scene = null!;
     private GridRenderer _grid = null!;
     
-    private int _frameCount = 0;
-    private double _fpsTimer = 0;
+    private int _frameCount;
+    private double _fpsTimer;
 
     public void Run()
     {
@@ -81,7 +81,7 @@ public class Engine
             _input.Initialize();
 
             SceneLoader.Load("Assets/scene.json", _scene, _gl);
-            _grid = new GridRenderer(_gl);
+            _grid = new GridRenderer(_gl, _config.Window);
         }
         catch (Exception e)
         {
@@ -157,8 +157,8 @@ public class Engine
     {
         _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         
-        _renderer.Render(_scene, (float) deltaTime);
         _grid.Render(_camera);
+        _renderer.Render(_scene, (float) deltaTime);
     }
 
     private void OnResize(Vector2D<int> size)

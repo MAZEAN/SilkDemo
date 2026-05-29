@@ -17,7 +17,9 @@ public class Scene
     public void Dispose()
     {
         foreach (var entity in _entities)
+        {
             entity.Dispose();
+        }
         _entities.Clear();
     }
 }

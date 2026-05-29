@@ -8,10 +8,12 @@ public class GridRenderer : IDisposable
     private readonly GL _gl;
     private readonly GLShader _shader;
     private readonly Mesh _mesh;
+    private readonly Config.WindowConfig _config;
 
-    public GridRenderer(GL gl)
+    public GridRenderer(GL gl, Config.WindowConfig config)
     {
-        _gl    = gl;
+        _gl     = gl;
+        _config = config;
         _shader = new GLShader(gl, "Assets/Shaders/grid.vert", "Assets/Shaders/grid.frag");
 
         // fullscreen quad in NDC space
@@ -30,16 +32,40 @@ public class GridRenderer : IDisposable
     // GridRenderer.cs
     public void Render(Camera camera)
     {
+        SetGL();
+        
         _shader.Use();
-        _shader.SetUniform("uView",       camera.GetViewMatrix());
+
+        _shader.SetUniform("uView", camera.GetViewMatrix());
         _shader.SetUniform("uProjection", camera.GetProjectionMatrix());
-        _shader.SetUniform("uCameraPos",   camera.GetPosition()); // add this
+        _shader.SetUniform("uCameraPos", camera.GetPosition());
+        _shader.SetUniform("background", _config.ClearColor);
 
         _mesh.Bind();
+
         unsafe
         {
-            _gl.DrawElements(PrimitiveType.Triangles, 6, DrawElementsType.UnsignedInt, (void*)0);
+            _gl.DrawElements(
+                PrimitiveType.Triangles,
+                6,
+                DrawElementsType.UnsignedInt,
+                (void*)0
+            );
         }
+
+        RestoreGL();
+    }
+
+    private void SetGL()
+    {
+        _gl.DepthFunc(GLEnum.Lequal);
+        _gl.DepthMask(false); // Critical: don't let transparent grid overwrite depth
+    }
+
+    private void RestoreGL()
+    {
+        _gl.DepthMask(true);
+        _gl.DepthFunc(DepthFunction.Less);
     }
 
     public void Dispose()

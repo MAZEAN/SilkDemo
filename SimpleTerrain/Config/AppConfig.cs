@@ -14,7 +14,7 @@ public class CameraConfig
 {
     public float FOV { get; init; } = 45f;
     public float Near { get; init; } = 0.1f;
-    public float Far { get; init; } = 100f;
+    public float Far { get; init; } = 1000f;
     public float SensitivityX { get; init; } = 0.1f;
     public float SensitivityY { get; init; } = 0.1f;
     public float ZoomSensitivity { get; init; } = 1.5f;
@@ -28,7 +28,7 @@ public class WindowConfig
     public IMonitor PrimaryMonitor = FindPrimaryMonitor();
     public bool EnableVSync { get; init; } = true;
     public int Samples { get; init; } = 4;
-    public Vector4 ClearColor { get; init; } = new(0.2f, 0.2f, 0.2f, 1.0f);
+    public Vector4 ClearColor { get; init; } = new(0.3f, 0.3f, 0.3f, 1.0f);
 
     private static IMonitor FindPrimaryMonitor()
     {
