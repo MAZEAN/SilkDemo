@@ -1,10 +1,13 @@
 namespace SimpleTerrain.Scene;
-using SimpleTerrain.Rendering;
+
+using Rendering;
+using Lighting;
 
 public class Scene
 {
     private readonly List<Entity> _entities = new();
     public IReadOnlyList<Entity> Entities => _entities;
+    public LightingSystem Lighting { get; } = new();
 
     public void AddEntity(Entity entity) => _entities.Add(entity);
     public void RemoveEntity(Entity entity) => _entities.Remove(entity);

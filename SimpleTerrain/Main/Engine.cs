@@ -8,6 +8,7 @@ using Config;
 using Scene;
 using Rendering;
 using Input;
+using Lighting;
 
 public class Engine
 {
@@ -74,13 +75,16 @@ public class Engine
                 -90f,
                 0f
             );
+            
             _camera.SetAspectRatio(_window.FramebufferSize);
 
             _renderer = new Renderer(_gl, _camera, _config);
+            
             _input    = new InputSystem(_window, _camera, _config);
             _input.Initialize();
 
             SceneLoader.Load("Assets/scene.json", _scene, _gl);
+            
             _grid = new GridRenderer(_gl, _config.Window);
         }
         catch (Exception e)
@@ -134,10 +138,8 @@ public class Engine
         _gl.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
     }
 
-    private void OnUpdate(double deltaTime)
+    private void SetFPSCounter(double deltaTime)
     {
-        _input.UpdateMovement((float)deltaTime);
-
         _fpsTimer   += deltaTime;
         _frameCount += 1;
 
@@ -151,6 +153,12 @@ public class Engine
             _frameCount = 0;
             _fpsTimer   = 0;
         }
+    }
+
+    private void OnUpdate(double deltaTime)
+    {
+        _input.UpdateMovement((float)deltaTime);
+        SetFPSCounter(deltaTime);
     }
 
     private void OnRender(double deltaTime)

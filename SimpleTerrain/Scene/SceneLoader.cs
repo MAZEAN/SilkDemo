@@ -1,8 +1,11 @@
 namespace SimpleTerrain.Scene;
+
 using System.Text.Json;
 using System.Numerics;
-using SimpleTerrain.Rendering;
 using Silk.NET.OpenGL;
+
+using Rendering;
+using Lighting;
 
 public static class SceneLoader
 {
@@ -34,6 +37,46 @@ public static class SceneLoader
 
             scene.AddEntity(entity);
         }
+        
+        // load lights
+        foreach (var d in def.Lights.Directional)
+        {
+            scene.Lighting.Add(new DirectionalLight
+            {
+                Direction = new Vector3(d.Direction[0], d.Direction[1], d.Direction[2]),
+                Color     = new Vector3(d.Color[0],     d.Color[1],     d.Color[2]),
+                Intensity = d.Intensity,
+                Enabled   = d.Enabled
+            });
+        }
+
+        foreach (var p in def.Lights.Point)
+        {
+            scene.Lighting.Add(new PointLight
+            {
+                Position  = new Vector3(p.Position[0], p.Position[1], p.Position[2]),
+                Color     = new Vector3(p.Color[0],    p.Color[1],    p.Color[2]),
+                Intensity = p.Intensity,
+                Constant  = p.Constant,
+                Linear    = p.Linear,
+                Quadratic = p.Quadratic,
+                Enabled   = p.Enabled
+            });
+        }
+
+        foreach (var s in def.Lights.Spot)
+        {
+            scene.Lighting.Add(new SpotLight
+            {
+                Position    = new Vector3(s.Position[0],  s.Position[1],  s.Position[2]),
+                Direction   = new Vector3(s.Direction[0], s.Direction[1], s.Direction[2]),
+                Color       = new Vector3(s.Color[0],     s.Color[1],     s.Color[2]),
+                Intensity   = s.Intensity,
+                InnerCutoff = s.InnerCutoff,
+                OuterCutoff = s.OuterCutoff,
+                Enabled     = s.Enabled
+            });
+        }
     }
 
     private static Material LoadMaterialFile(GL gl, string path)
@@ -43,6 +86,7 @@ public static class SceneLoader
                    ?? throw new Exception($"Failed to deserialize material file: {path}");
 
         var shader  = new GLShader(gl, def.Shader + ".vert", def.Shader + ".frag");
+        
         var texture = def.Texture != null ? new GLTexture(gl, def.Texture) : null;
 
         return new Material(shader, texture)

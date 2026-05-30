@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Numerics;
 using Silk.NET.OpenGL;
+using Lighting;
 
 public class GLShader : IDisposable
 {
@@ -16,15 +17,18 @@ public class GLShader : IDisposable
 
         uint vertex = LoadShader(ShaderType.VertexShader, vertexPath);
         uint fragment = LoadShader(ShaderType.FragmentShader, fragmentPath);
+        
         _handle = _gl.CreateProgram();
         _gl.AttachShader(_handle, vertex);
         _gl.AttachShader(_handle, fragment);
         _gl.LinkProgram(_handle);
         _gl.GetProgram(_handle, GLEnum.LinkStatus, out var status);
+        
         if (status == 0)
         {
             throw new Exception($"Program failed to link with error: {_gl.GetProgramInfoLog(_handle)}");
         }
+        
         _gl.DetachShader(_handle, vertex);
         _gl.DetachShader(_handle, fragment);
         _gl.DeleteShader(vertex);
@@ -67,7 +71,6 @@ public class GLShader : IDisposable
         _gl.Uniform1(location, value);
     }
     
-    
     public void SetUniform(string name, Vector2 value)
     {
         int location = _gl.GetUniformLocation(_handle, name);
@@ -105,11 +108,15 @@ public class GLShader : IDisposable
 
     private uint LoadShader(ShaderType type, string path)
     {
+        // Console.WriteLine($"Loading shader: {Path.GetFullPath(path)}");
         string src = File.ReadAllText(path);
         uint handle = _gl.CreateShader(type);
+        
         _gl.ShaderSource(handle, src);
         _gl.CompileShader(handle);
+        
         string infoLog = _gl.GetShaderInfoLog(handle);
+        
         if (!string.IsNullOrWhiteSpace(infoLog))
         {
             throw new Exception($"Error compiling shader of type {type}, failed with error {infoLog}");

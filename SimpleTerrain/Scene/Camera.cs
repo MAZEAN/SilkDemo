@@ -4,7 +4,7 @@ using System;
 using System.Numerics;
 using Silk.NET.Maths;
 using Config;
-using Core;
+using Utils;
 
 public class Camera
 {
@@ -12,7 +12,7 @@ public class Camera
     private Vector3 _position; 
     
     public Vector3 Forward { get; private set; }
-    public Vector3 Up { get; private set; }
+    public Vector3 Up { get; }
     
     private float _aspectRatio;
     private float _yaw;
