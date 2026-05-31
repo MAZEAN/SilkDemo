@@ -1,5 +1,4 @@
 namespace SimpleTerrain.Rendering;
-
 using System.Numerics;
 
 public class Material : IDisposable
@@ -27,10 +26,5 @@ public class Material : IDisposable
     public void Dispose()
     {
         Shader.Dispose();
-        Albedo?.Dispose();
-        Normal?.Dispose();
-        Roughness?.Dispose();
-        Metallic?.Dispose();
-        AO?.Dispose();
     }
 }

@@ -11,6 +11,9 @@ public class Transform
     private bool _dirty = true;
 
     public Transform? Parent { get; set; }
+    
+    public bool IsDirty => _dirty;
+    public void ClearDirty() => _dirty = false;
 
     public Vector3 Position
     {

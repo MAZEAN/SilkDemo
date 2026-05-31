@@ -20,6 +20,7 @@ public class Engine
     private InputSystem _input = null!;
     private Scene _scene = null!;
     private GridRenderer _grid = null!;
+    private SceneLoader _sceneLoader = null!;
     
     private int _frameCount;
     private double _fpsTimer;
@@ -83,7 +84,8 @@ public class Engine
             _input    = new InputSystem(_window, _camera, _config);
             _input.Initialize();
 
-            SceneLoader.Load("Assets/scene.json", _scene, _gl);
+            _sceneLoader = new SceneLoader(_gl, _scene, _config.Render);
+            _sceneLoader.Load();
             
             _grid = new GridRenderer(_gl, _config.Window);
         }
@@ -169,15 +171,17 @@ public class Engine
         _renderer.Render(_scene, (float) deltaTime);
     }
 
+    // Engine.cs
     private void OnResize(Vector2D<int> size)
     {
         _gl.Viewport(size);
         _camera.SetAspectRatio(size);
+        _renderer.OnResize();
     }
-    
     private void OnClose()
     {
         _scene.Dispose();
         _grid.Dispose();
+        _sceneLoader.Dispose();
     }
 }

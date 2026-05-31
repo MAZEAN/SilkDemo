@@ -9,13 +9,31 @@ public class Scene
     public IReadOnlyList<Entity> Entities => _entities;
     public LightingSystem Lighting { get; } = new();
 
-    public void AddEntity(Entity entity) => _entities.Add(entity);
-    public void RemoveEntity(Entity entity) => _entities.Remove(entity);
+    private Dictionary<GLShader, List<Entity>> _shaderGroups = new();
+    private bool _shaderGroupsDirty = true;
 
     public Dictionary<GLShader, List<Entity>> GetEntitiesByShader()
-        => _entities
+    {
+        if (!_shaderGroupsDirty) return _shaderGroups;
+
+        _shaderGroups = _entities
             .GroupBy(e => e.Material.Shader)
             .ToDictionary(g => g.Key, g => g.ToList());
+        _shaderGroupsDirty = false;
+        return _shaderGroups;
+    }
+
+    public void AddEntity(Entity entity)
+    {
+        _entities.Add(entity);
+        _shaderGroupsDirty = true;
+    }
+
+    public void RemoveEntity(Entity entity)
+    {
+        _entities.Remove(entity);
+        _shaderGroupsDirty = true;
+    }
     
     public void Dispose()
     {

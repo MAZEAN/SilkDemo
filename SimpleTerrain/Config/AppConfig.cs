@@ -7,7 +7,14 @@ public class AppConfig
 {
     public WindowConfig Window { get; init; } = new();
     public CameraConfig Camera { get; init; } = new();
+    public RenderConfig Render { get; init; } = new();
     public float MoveSpeed { get; init; } = 2.5f;
+}
+
+public class RenderConfig
+{
+    public string ScenePath { get; init; } = "Assets/scene.json";
+    public int TextureCacheSize { get; init; } = 128;
 }
 
 public class CameraConfig

@@ -6,25 +6,42 @@ using Silk.NET.OpenGL;
 
 using Rendering;
 using Lighting;
+using Config;
 
-public static class SceneLoader
+public class SceneLoader : IDisposable
 {
+    private readonly GL _gl;
+    private readonly Scene _scene;
+    private readonly string _path;
+    private readonly RenderConfig _config;
+    private readonly TextureCache _textureCache;
+    
     private static readonly JsonSerializerOptions Options = new()
     {
         PropertyNameCaseInsensitive = true
     };
 
-    public static void Load(string path, Scene scene, GL gl)
+    public SceneLoader(GL gl, Scene scene, RenderConfig config)
     {
-        var json = File.ReadAllText(path);
+        _gl = gl;
+        _scene = scene;
+        _path = config.ScenePath;
+        _config = config;
+        
+        _textureCache = new TextureCache(gl, config.TextureCacheSize);
+    }
+
+    public void Load()
+    {
+        var json = File.ReadAllText(_path);
         var def  = JsonSerializer.Deserialize<SceneDefinition>(json, Options)
-                   ?? throw new Exception($"Failed to deserialize scene file: {path}");
+                   ?? throw new Exception($"Failed to deserialize scene file: {_path}");
 
         foreach (var e in def.Entities)
         {
-            var model    = new Model(gl, e.Model);
+            var model    = new Model(_gl, e.Model);
             var material = e.Material != null
-                ? LoadMaterialFile(gl, e.Material)
+                ? LoadMaterialFile(e.Material)
                 : throw new Exception($"Entity '{e.Name}' must have a material file.");
 
             var entity = new Entity(model, material);
@@ -35,13 +52,13 @@ public static class SceneLoader
             if (e.Rotation is { Length: 3 })
                 entity.Transform.SetEulerAngles(e.Rotation[0], e.Rotation[1], e.Rotation[2]);
 
-            scene.AddEntity(entity);
+            _scene.AddEntity(entity);
         }
         
         // load lights
         foreach (var d in def.Lights.Directional)
         {
-            scene.Lighting.Add(new DirectionalLight
+            _scene.Lighting.Add(new DirectionalLight
             {
                 Direction = new Vector3(d.Direction[0], d.Direction[1], d.Direction[2]),
                 Color     = new Vector3(d.Color[0],     d.Color[1],     d.Color[2]),
@@ -52,7 +69,7 @@ public static class SceneLoader
 
         foreach (var p in def.Lights.Point)
         {
-            scene.Lighting.Add(new PointLight
+            _scene.Lighting.Add(new PointLight
             {
                 Position  = new Vector3(p.Position[0], p.Position[1], p.Position[2]),
                 Color     = new Vector3(p.Color[0],    p.Color[1],    p.Color[2]),
@@ -66,7 +83,7 @@ public static class SceneLoader
 
         foreach (var s in def.Lights.Spot)
         {
-            scene.Lighting.Add(new SpotLight
+            _scene.Lighting.Add(new SpotLight
             {
                 Position    = new Vector3(s.Position[0],  s.Position[1],  s.Position[2]),
                 Direction   = new Vector3(s.Direction[0], s.Direction[1], s.Direction[2]),
@@ -79,26 +96,31 @@ public static class SceneLoader
         }
     }
 
-    private static Material LoadMaterialFile(GL gl, string path)
+    private Material LoadMaterialFile(string path)
     {
         var json = File.ReadAllText(path);
         var def  = JsonSerializer.Deserialize<MaterialDefinition>(json, Options)
                    ?? throw new Exception($"Failed to deserialize material file: {path}");
 
-        var shader = new GLShader(gl, def.Shader + ".vert", def.Shader + ".frag");
+        var shader = new GLShader(_gl, def.Shader + ".vert", def.Shader + ".frag");
 
         return new Material(shader)
         {
-            Albedo         = def.Albedo    != null ? new GLTexture(gl, def.Albedo)    : null,
-            Normal         = def.Normal    != null ? new GLTexture(gl, def.Normal)    : null,
-            Roughness      = def.Roughness != null ? new GLTexture(gl, def.Roughness) : null,
-            Metallic       = def.Metallic  != null ? new GLTexture(gl, def.Metallic)  : null,
-            AO             = def.AO        != null ? new GLTexture(gl, def.AO)        : null,
+            Albedo    = def.Albedo    != null ? _textureCache!.Get(def.Albedo)    : null,
+            Normal    = def.Normal    != null ? _textureCache!.Get(def.Normal)    : null,
+            Roughness = def.Roughness != null ? _textureCache!.Get(def.Roughness) : null,
+            Metallic  = def.Metallic  != null ? _textureCache!.Get(def.Metallic)  : null,
+            AO        = def.AO        != null ? _textureCache!.Get(def.AO)        : null,
             RoughnessValue = def.RoughnessValue,
             MetallicValue  = def.MetallicValue,
             Color          = new Vector4(def.Color[0],   def.Color[1],   def.Color[2],   def.Color[3]),
             UvScale        = new Vector2(def.UvScale[0],  def.UvScale[1]),
             UvOffset       = new Vector2(def.UvOffset[0], def.UvOffset[1])
         };
+    }
+
+    public void Dispose()
+    {
+        _textureCache.Dispose();
     }
 }

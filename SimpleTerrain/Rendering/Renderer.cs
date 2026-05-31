@@ -11,6 +11,8 @@ public class Renderer
     private readonly GL _gl;
     private readonly Camera _camera;
     private readonly AppConfig _config;
+    
+    private bool _projectionDirty = true;
 
     public Renderer(GL gl, Camera camera, AppConfig config)
     {
@@ -27,53 +29,54 @@ public class Renderer
         foreach (var (shader, entities) in scene.GetEntitiesByShader())
         {
             shader.Use();
-            shader.SetUniform("uView",        view);
-            shader.SetUniform("uProjection",  projection);
-            shader.SetUniform("uCameraPos",   _camera.GetPosition());
-            
-            // tell shader which slot each map is in
-            shader.SetUniform("uAlbedoMap",    0);
-            shader.SetUniform("uNormalMap",    1);
-            shader.SetUniform("uRoughnessMap", 2);
-            shader.SetUniform("uMetallicMap",  3);
-            shader.SetUniform("uAOMap",        4);
-            
-            UploadLights(shader, scene.Lighting); 
+
+            // always upload — camera moves every frame
+            shader.SetUniform("uView",      view);
+            shader.SetUniform("uCameraPos", _camera.GetPosition());
+
+            // only on first frame or window resize
+            if (_projectionDirty)
+            {
+                shader.SetUniform("uProjection", projection);
+                shader.SetUniform("uAlbedoMap",    0);
+                shader.SetUniform("uNormalMap",    1);
+                shader.SetUniform("uRoughnessMap", 2);
+                shader.SetUniform("uMetallicMap",  3);
+                shader.SetUniform("uAOMap",        4);
+            }
+            UploadLights(shader, scene.Lighting);
 
             foreach (var entity in entities)
             {
                 var mat = entity.Material;
 
-                // bind each map to its own texture slot
+                // ALWAYS rebind textures — OpenGL slots are global state
+                // previous entity may have bound different textures to these slots
                 mat.Albedo?.Bind(TextureUnit.Texture0);
                 mat.Normal?.Bind(TextureUnit.Texture1);
                 mat.Roughness?.Bind(TextureUnit.Texture2);
                 mat.Metallic?.Bind(TextureUnit.Texture3);
                 mat.AO?.Bind(TextureUnit.Texture4);
 
-                // flags so shader knows which maps are available
+                // ALWAYS upload has-flags — they differ per entity
                 shader.SetUniform("uHasAlbedo",    mat.Albedo    != null ? 1 : 0);
                 shader.SetUniform("uHasNormal",    mat.Normal    != null ? 1 : 0);
                 shader.SetUniform("uHasRoughness", mat.Roughness != null ? 1 : 0);
                 shader.SetUniform("uHasMetallic",  mat.Metallic  != null ? 1 : 0);
                 shader.SetUniform("uHasAO",        mat.AO        != null ? 1 : 0);
 
-                // scalar fallbacks
-                shader.SetUniform("uRoughnessValue", mat.RoughnessValue);
-                shader.SetUniform("uMetallicValue",  mat.MetallicValue);
-                shader.SetUniform("uColor",          mat.Color);
-
-                shader.SetUniform("uModel",    entity.Transform.WorldMatrix);
+                // ALWAYS upload transform — entity may have moved
                 shader.SetUniform("uModel", entity.Transform.WorldMatrix);
-
                 if (Matrix4x4.Invert(entity.Transform.WorldMatrix, out var invModel))
                     shader.SetUniformMat3x3("uNormalMatrix", Matrix4x4.Transpose(invModel));
                 else
                     shader.SetUniformMat3x3("uNormalMatrix", Matrix4x4.Transpose(entity.Transform.WorldMatrix));
                 
-                shader.SetUniformMat3x3("uNormalMatrix", Matrix4x4.Transpose(invModel));
-                shader.SetUniform("uUvScale",  mat.UvScale);
-                shader.SetUniform("uUvOffset", mat.UvOffset);
+                shader.SetUniform("uRoughnessValue", mat.RoughnessValue);
+                shader.SetUniform("uMetallicValue",  mat.MetallicValue);
+                shader.SetUniform("uColor",          mat.Color);
+                shader.SetUniform("uUvScale",        mat.UvScale);
+                shader.SetUniform("uUvOffset",       mat.UvOffset);
 
                 foreach (var mesh in entity.Model.Meshes)
                 {
@@ -86,6 +89,8 @@ public class Renderer
                 }
             }
         }
+        
+        if (_projectionDirty)      _projectionDirty = false;
     }
     
     private void UploadLights(GLShader shader, LightingSystem lights)
@@ -126,4 +131,6 @@ public class Renderer
             shader.SetUniform($"uSpotLights[{i}].outerCutoff", MathF.Cos(spots[i].OuterCutoff * MathF.PI / 180f));
         }
     }
+    
+    public void OnResize() => _projectionDirty = true;
 }
