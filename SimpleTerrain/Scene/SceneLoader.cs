@@ -127,7 +127,8 @@ public class SceneLoader : IDisposable
     {
         _textures = new AssetCache<GLTexture>(
             _config.TextureCacheSize,
-            path => new GLTexture(_gl, path));
+            path => new GLTexture(_gl, Path.GetFullPath(path))
+        );
 
         _shaders = new AssetCache<GLShader>(
             _config.ShaderCacheSize,

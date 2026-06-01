@@ -13,7 +13,9 @@ public class Renderer
     private readonly AppConfig _config;
     
     private readonly List<PointLight> _activePointLights = new();
-    private readonly List<SpotLight> _activeSpotLights  = new();
+    private readonly List<SpotLight>  _activeSpotLights  = new();
+
+    private readonly uint[] _boundTextures = new uint[16];
     
     private bool _projectionDirty = true;
 
@@ -22,6 +24,8 @@ public class Renderer
         _gl = gl;
         _camera = camera;
         _config = config;
+        
+        InitializeTextureCache();
     }
 
     public void Render(Scene scene, float deltaTime)
@@ -34,11 +38,14 @@ public class Renderer
         {
             shader.Use();
             
-            shader.SetUniform("uView",      view);
+            shader.SetUniform("uView", view);
             shader.SetUniform("uCameraPos", cameraPosition);
             
-            if (_projectionDirty) UploadGlobalUniforms(shader);
-            if (lightingDirty) UploadLighting(shader, scene.Lighting);
+            if (_projectionDirty)
+                UploadGlobalUniforms(shader);
+
+            if (lightingDirty)
+                UploadLighting(shader, scene.Lighting);
 
             foreach (var entity in entities)
             {
@@ -54,30 +61,60 @@ public class Renderer
                     mesh.Bind();
                     unsafe
                     {
-                        _gl.DrawElements(PrimitiveType.Triangles, mesh.IndexCount,
-                            DrawElementsType.UnsignedInt, (void*)0);
+                        _gl.DrawElements(
+                            PrimitiveType.Triangles,
+                            mesh.IndexCount,
+                            DrawElementsType.UnsignedInt,
+                            (void*)0
+                        );
                     }
                 }
             }
         }
         
-        if (_projectionDirty) _projectionDirty = false;
-        if (lightingDirty) scene.Lighting.ClearDirty();
-    }
+        if (_projectionDirty)
+            _projectionDirty = false;
 
+        if (lightingDirty)
+            scene.Lighting.ClearDirty();
+    }
+    
+    // -----------------------------
+    // Material + Texture handling
+    // -----------------------------
     private void BindMaterialTextures(Material mat)
     {
-        mat.Albedo?.Bind(TextureUnit.Texture0);
-        mat.Normal?.Bind(TextureUnit.Texture1);
-        mat.Roughness?.Bind(TextureUnit.Texture2);
-        mat.Metallic?.Bind(TextureUnit.Texture3);
-        mat.AO?.Bind(TextureUnit.Texture4);
+        BindTexture(mat.Albedo,    TextureUnit.Texture0);
+        BindTexture(mat.Normal,    TextureUnit.Texture1);
+        BindTexture(mat.Roughness, TextureUnit.Texture2);
+        BindTexture(mat.Metallic,  TextureUnit.Texture3);
+        BindTexture(mat.AO,        TextureUnit.Texture4);
     }
 
+    private void BindTexture(GLTexture? tex, TextureUnit slot)
+    {
+        int index = (int)slot - (int)TextureUnit.Texture0;
+        uint handle = tex?.Handle ?? 0;
+
+        if (_boundTextures[index] == handle)
+            return;
+
+        _gl.ActiveTexture(slot);
+        _gl.BindTexture(TextureTarget.Texture2D, handle);
+
+        _boundTextures[index] = handle;
+    }
+    
+    // -----------------------------
+    // Global uniforms
+    // -----------------------------
     private void UploadGlobalUniforms(GLShader shader)
     {
         var projection = _camera.GetProjectionMatrix();
+
         shader.SetUniform("uProjection", projection);
+
+        // texture unit bindings
         shader.SetUniform("uAlbedoMap",    0);
         shader.SetUniform("uNormalMap",    1);
         shader.SetUniform("uRoughnessMap", 2);
@@ -85,6 +122,10 @@ public class Renderer
         shader.SetUniform("uAOMap",        4);
     }
 
+
+    // -----------------------------
+    // Material
+    // -----------------------------
     private void UploadMaterialFlags(GLShader shader, Material mat)
     {
         shader.SetUniform("uHasAlbedo",    mat.Albedo    != null ? 1 : 0);
@@ -92,15 +133,6 @@ public class Renderer
         shader.SetUniform("uHasRoughness", mat.Roughness != null ? 1 : 0);
         shader.SetUniform("uHasMetallic",  mat.Metallic  != null ? 1 : 0);
         shader.SetUniform("uHasAO",        mat.AO        != null ? 1 : 0);
-    }
-
-    private void UploadTransform(GLShader shader, Entity entity)
-    {
-        shader.SetUniform("uModel", entity.Transform.WorldMatrix);
-        if (Matrix4x4.Invert(entity.Transform.WorldMatrix, out var invModel))
-            shader.SetUniformMat3x3("uNormalMatrix", Matrix4x4.Transpose(invModel));
-        else
-            shader.SetUniformMat3x3("uNormalMatrix", Matrix4x4.Transpose(entity.Transform.WorldMatrix));
     }
 
     private void UploadMaterialProperties(GLShader shader, Material mat)
@@ -111,36 +143,70 @@ public class Renderer
         shader.SetUniform("uUvScale",        mat.UvScale);
         shader.SetUniform("uUvOffset",       mat.UvOffset);
     }
-    
+
+
+    // -----------------------------
+    // Transform
+    // -----------------------------
+    private void UploadTransform(GLShader shader, Entity entity)
+    {
+        var model = entity.Transform.WorldMatrix;
+
+        shader.SetUniform("uModel", model);
+
+        if (Matrix4x4.Invert(model, out var invModel))
+            shader.SetUniformMat3x3("uNormalMatrix", Matrix4x4.Transpose(invModel));
+        else
+            shader.SetUniformMat3x3("uNormalMatrix", Matrix4x4.Transpose(model));
+    }
+
+
+    // -----------------------------
+    // Lighting
+    // -----------------------------
     private void UploadLighting(GLShader shader, LightingSystem lights)
     {
-        // directional
-        var dir = lights.DirectionalLights.FirstOrDefault(l => l.Enabled);
-        if (dir != null)
-        {
-            shader.SetUniform("uDirLight.direction", dir.Direction);
-            shader.SetUniform("uDirLight.color",     dir.Color);
-            shader.SetUniform("uDirLight.intensity",  dir.Intensity);
-        }
+        UploadDirectionalLight(shader, lights);
         UploadPointLights(shader, lights);
         UploadSpotLights(shader, lights);
+    }
+
+    private void UploadDirectionalLight(GLShader shader, LightingSystem lights)
+    {
+        DirectionalLight? dir = null;
+
+        foreach (var l in lights.DirectionalLights)
+        {
+            if (!l.Enabled) continue;
+            dir = l;
+            break;
+        }
+
+        if (dir == null)
+            return;
+
+        shader.SetUniform("uDirLight.direction", dir.Direction);
+        shader.SetUniform("uDirLight.color",     dir.Color);
+        shader.SetUniform("uDirLight.intensity", dir.Intensity);
     }
 
     private void UploadPointLights(GLShader shader, LightingSystem lights)
     {
         _activePointLights.Clear();
+
         foreach (var l in lights.PointLights)
         {
             if (l.Enabled)
                 _activePointLights.Add(l);
         }
 
-        int pointLightsCount = _activePointLights.Count;
-        shader.SetUniform("uPointLightCount", pointLightsCount);
+        int count = _activePointLights.Count;
+        shader.SetUniform("uPointLightCount", count);
         
-        for (int i = 0; i < pointLightsCount; i++)
+        for (int i = 0; i < count; i++)
         {
             var light = _activePointLights[i];
+
             shader.SetUniform($"uPointLights[{i}].position",  light.Position);
             shader.SetUniform($"uPointLights[{i}].color",     light.Color);
             shader.SetUniform($"uPointLights[{i}].intensity", light.Intensity);
@@ -153,25 +219,43 @@ public class Renderer
     private void UploadSpotLights(GLShader shader, LightingSystem lights)
     {
         _activeSpotLights.Clear();
+
         foreach (var l in lights.SpotLights)
         {
             if (l.Enabled)
                 _activeSpotLights.Add(l);
         }
-        
-        int spotLightsCount = _activeSpotLights.Count;
-        shader.SetUniform("uSpotLightCount", spotLightsCount);
-        for (int i = 0; i < spotLightsCount; i++)
+
+        int count = _activeSpotLights.Count;
+        shader.SetUniform("uSpotLightCount", count);
+
+        for (int i = 0; i < count; i++)
         {
             var light = _activeSpotLights[i];
-            shader.SetUniform($"uSpotLights[{i}].position",    light.Position);
-            shader.SetUniform($"uSpotLights[{i}].direction",   light.Direction);
-            shader.SetUniform($"uSpotLights[{i}].color",       light.Color);
-            shader.SetUniform($"uSpotLights[{i}].intensity",   light.Intensity);
-            shader.SetUniform($"uSpotLights[{i}].innerCutoff", MathF.Cos(light.InnerCutoff * MathF.PI / 180f));
-            shader.SetUniform($"uSpotLights[{i}].outerCutoff", MathF.Cos(light.OuterCutoff * MathF.PI / 180f));
+
+            shader.SetUniform($"uSpotLights[{i}].position",  light.Position);
+            shader.SetUniform($"uSpotLights[{i}].direction", light.Direction);
+            shader.SetUniform($"uSpotLights[{i}].color",     light.Color);
+            shader.SetUniform($"uSpotLights[{i}].intensity", light.Intensity);
+
+            shader.SetUniform($"uSpotLights[{i}].innerCutoff",
+                MathF.Cos(light.InnerCutoff * MathF.PI / 180f));
+
+            shader.SetUniform($"uSpotLights[{i}].outerCutoff",
+                MathF.Cos(light.OuterCutoff * MathF.PI / 180f));
         }
     }
-    
-    public void OnResize() => _projectionDirty = true;
+
+    private void InitializeTextureCache()
+    {
+
+        for (int i = 0; i < _boundTextures.Length; i++)
+            _boundTextures[i] = uint.MaxValue;
+
+    }
+
+    public void OnResize()
+    {
+        _projectionDirty = true;
+    }
 }

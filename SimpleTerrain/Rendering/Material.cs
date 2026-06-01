@@ -22,6 +22,23 @@ public class Material : IDisposable
     {
         Shader = shader;
     }
+    
+    public ulong SortKey
+    {
+        get
+        {
+            ulong key = 0;
+            
+            // | Metallic | Roughness | Normal | Albedo |
+            // | 16 bits  | 16 bits   | 16 bits| 16 bits|
+            key |= ((ulong)(Albedo?.Handle ?? 0) & 0xFFFF) <<  0;
+            key |= ((ulong)(Normal?.Handle ?? 0) & 0xFFFF) << 16;
+            key |= ((ulong)(Roughness?.Handle ?? 0) & 0xFFFF) << 32;
+            key |= ((ulong)(Metallic?.Handle ?? 0) & 0xFFFF) << 48;
+            
+            return key;
+        }
+    }
 
     public void Dispose()
     {
