@@ -40,11 +40,11 @@ uniform sampler2D uRoughnessMap; // slot 2 — how rough/smooth
 uniform sampler2D uMetallicMap;  // slot 3 — metal or not
 uniform sampler2D uAOMap;        // slot 4 — shadow in crevices
 
-uniform int uHasAlbedo;          // 1 if bound, 0 if using scalar fallback
-uniform int   uHasNormal;
-uniform int   uHasRoughness;
-uniform int   uHasMetallic;
-uniform int   uHasAO;
+uniform int HasAlbedo;          // 1 if bound, 0 if using scalar fallback
+uniform int uHasNormal;
+uniform int uHasRoughness;
+uniform int uHasMetallic;
+uniform int uHasAO;
 
 uniform float uRoughnessValue;
 uniform float uMetallicValue;

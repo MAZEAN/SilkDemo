@@ -13,8 +13,10 @@ public class AppConfig
 
 public class RenderConfig
 {
-    public string ScenePath { get; init; } = "Assets/scene.json";
     public int TextureCacheSize { get; init; } = 128;
+    public int ModelCacheSize { get; init; } = 64;
+    public int ShaderCacheSize { get; init; } = 32;
+    public string ScenePath { get; init; } = "Assets/scene.json";
 }
 
 public class CameraConfig
@@ -29,23 +31,9 @@ public class CameraConfig
 
 public class WindowConfig
 {
-    
     public string Title { get; init; } = "SimpleTerrain";
-    public WindowState WindowState = WindowState.Maximized;
-    public IMonitor PrimaryMonitor = FindPrimaryMonitor();
+    public WindowState WindowState { get; init; } = WindowState.Maximized;
     public bool EnableVSync { get; init; } = true;
     public int Samples { get; init; } = 4;
-    public Vector4 ClearColor { get; init; } = new(0.3f, 0.3f, 0.3f, 1.0f);
-
-    private static IMonitor FindPrimaryMonitor()
-    {
-        var monitor = Monitor.GetMonitors(null)
-            .OrderByDescending(m =>
-            {
-                var r = m.VideoMode.Resolution;
-                return r.HasValue ? r.Value.X * r.Value.Y : 0;
-            })
-            .First();
-        return monitor;
-    }
+    public float[] ClearColor { get; init; } = [1.0f, 1.0f, 1.0f, 1.0f];
 }

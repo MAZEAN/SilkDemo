@@ -27,7 +27,11 @@ public class Engine
 
     public void Run()
     {
-        _config = new AppConfig();
+        var configPath = Path.Combine(
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..")),
+            "config.json");
+
+        _config = ConfigLoader.Load(configPath);
         _scene  = new Scene();
 
         var options = CreateWindowOptions();
@@ -46,6 +50,7 @@ public class Engine
     private WindowOptions CreateWindowOptions()
     {
         var options = WindowOptions.Default;
+        
         var monitor = Monitor.GetMonitors(null)
             .OrderByDescending(m =>
             {
@@ -54,9 +59,8 @@ public class Engine
             })
             .First();
 
-        options.WindowState = WindowState.Maximized;
-        options.Position = monitor.Bounds.Center;
-        options.Size = monitor.Bounds.Size;
+        options.WindowState = _config.Window.WindowState;
+        options.Position = monitor.Bounds.Origin;
         options.Title = _config.Window.Title;
         options.VSync = _config.Window.EnableVSync;
         options.Samples = _config.Window.Samples;
@@ -101,8 +105,8 @@ public class Engine
         _gl = GL.GetApi(_window);
 
         // background color when clearing the frame
-        var color = _config.Window.ClearColor;
-        _gl.ClearColor(color.X, color.Y, color.Z, color.W);
+        var c = _config.Window.ClearColor;
+        _gl.ClearColor(c[0], c[1], c[2], c[3]);
 
         // discard fragments that are behind already-drawn geometry
         _gl.Enable(EnableCap.DepthTest);

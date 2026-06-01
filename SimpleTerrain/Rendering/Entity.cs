@@ -16,7 +16,6 @@ public class Entity
     
     public void Dispose()
     {
-        Model.Dispose();
         Material.Dispose();
     }
 }

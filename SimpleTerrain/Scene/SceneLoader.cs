@@ -7,6 +7,7 @@ using Silk.NET.OpenGL;
 using Rendering;
 using Lighting;
 using Config;
+using Utils;
 
 public class SceneLoader : IDisposable
 {
@@ -14,7 +15,10 @@ public class SceneLoader : IDisposable
     private readonly Scene _scene;
     private readonly string _path;
     private readonly RenderConfig _config;
-    private readonly TextureCache _textureCache;
+    
+    private AssetCache<GLTexture> _textures;
+    private AssetCache<GLShader> _shaders;
+    private AssetCache<Model> _models;
     
     private static readonly JsonSerializerOptions Options = new()
     {
@@ -28,7 +32,7 @@ public class SceneLoader : IDisposable
         _path = config.ScenePath;
         _config = config;
         
-        _textureCache = new TextureCache(gl, config.TextureCacheSize);
+        InitializeCaches();
     }
 
     public void Load()
@@ -39,7 +43,7 @@ public class SceneLoader : IDisposable
 
         foreach (var e in def.Entities)
         {
-            var model    = new Model(_gl, e.Model);
+            var model = _models.Get(e.Model);
             var material = e.Material != null
                 ? LoadMaterialFile(e.Material)
                 : throw new Exception($"Entity '{e.Name}' must have a material file.");
@@ -102,15 +106,15 @@ public class SceneLoader : IDisposable
         var def  = JsonSerializer.Deserialize<MaterialDefinition>(json, Options)
                    ?? throw new Exception($"Failed to deserialize material file: {path}");
 
-        var shader = new GLShader(_gl, def.Shader + ".vert", def.Shader + ".frag");
+        var shader = _shaders.Get(def.Shader);
 
         return new Material(shader)
         {
-            Albedo    = def.Albedo    != null ? _textureCache!.Get(def.Albedo)    : null,
-            Normal    = def.Normal    != null ? _textureCache!.Get(def.Normal)    : null,
-            Roughness = def.Roughness != null ? _textureCache!.Get(def.Roughness) : null,
-            Metallic  = def.Metallic  != null ? _textureCache!.Get(def.Metallic)  : null,
-            AO        = def.AO        != null ? _textureCache!.Get(def.AO)        : null,
+            Albedo    = def.Albedo    != null ? _textures!.Get(def.Albedo)    : null,
+            Normal    = def.Normal    != null ? _textures!.Get(def.Normal)    : null,
+            Roughness = def.Roughness != null ? _textures!.Get(def.Roughness) : null,
+            Metallic  = def.Metallic  != null ? _textures!.Get(def.Metallic)  : null,
+            AO        = def.AO        != null ? _textures!.Get(def.AO)        : null,
             RoughnessValue = def.RoughnessValue,
             MetallicValue  = def.MetallicValue,
             Color          = new Vector4(def.Color[0],   def.Color[1],   def.Color[2],   def.Color[3]),
@@ -119,8 +123,29 @@ public class SceneLoader : IDisposable
         };
     }
 
+    private void InitializeCaches()
+    {
+        _textures = new AssetCache<GLTexture>(
+            _config.TextureCacheSize,
+            path => new GLTexture(_gl, path));
+
+        _shaders = new AssetCache<GLShader>(
+            _config.ShaderCacheSize,
+            shaderBase =>
+                new GLShader(
+                    _gl,
+                    shaderBase + ".vert",
+                    shaderBase + ".frag"));
+
+        _models = new AssetCache<Model>(
+            _config.ModelCacheSize,
+            path => new Model(_gl, path));
+    }
+
     public void Dispose()
     {
-        _textureCache.Dispose();
+        _textures.Dispose();
+        _shaders.Dispose();
+        _models.Dispose();
     }
 }
