@@ -1,4 +1,4 @@
-namespace SimpleTerrain.Rendering;
+namespace SimpleTerrain.Rendering.Resources;
 
 using System;
 using Silk.NET.OpenGL;

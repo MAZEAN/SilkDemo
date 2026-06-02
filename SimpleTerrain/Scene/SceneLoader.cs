@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Numerics;
 using Silk.NET.OpenGL;
 
-using Rendering;
+using Rendering.Resources;
 using Lighting;
 using Config;
 using Utils;

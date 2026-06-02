@@ -1,7 +1,7 @@
 namespace SimpleTerrain.Scene;
 
-using Rendering;
 using Lighting;
+using Rendering.Resources;
 
 public class Scene
 {

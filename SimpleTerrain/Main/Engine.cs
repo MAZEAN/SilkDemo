@@ -3,12 +3,10 @@ namespace SimpleTerrain.Main;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using Silk.NET.Maths;
-using System.Numerics;
 using Config;
 using Scene;
-using Rendering;
+using Rendering.Renderers;
 using Input;
-using Lighting;
 
 public class Engine
 {
@@ -20,7 +18,7 @@ public class Engine
     private Scene _scene = null!;
     private GridRenderer _grid = null!;
     private SceneLoader _sceneLoader = null!;
-    private CameraRenderer _cameraRenderer;
+    private CameraRenderer _cameraRenderer = null!;
     
     private int _frameCount;
     private double _fpsTimer;

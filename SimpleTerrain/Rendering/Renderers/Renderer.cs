@@ -1,10 +1,11 @@
-namespace SimpleTerrain.Rendering;
+namespace SimpleTerrain.Rendering.Renderers;
 
 using Silk.NET.OpenGL;
 using Config;
 using Scene;
 using System.Numerics;
 using Lighting;
+using Resources;
 
 public class Renderer
 {

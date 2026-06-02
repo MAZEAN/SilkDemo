@@ -1,8 +1,9 @@
-namespace SimpleTerrain.Rendering;
+namespace SimpleTerrain.Rendering.Renderers;
 
 using Silk.NET.OpenGL;
 using System.Numerics;
 using Scene;
+using Resources;
 
 public class CameraRenderer : IDisposable
 {
@@ -16,6 +17,10 @@ public class CameraRenderer : IDisposable
     private readonly Vector3 _cameraColor = new(1.0f, 0.5f, 0.0f);
     private readonly Vector3 _dirColor = new(1.0f, 1.0f, 1.0f);
 
+    private readonly float _scale = 0.5f;
+    private readonly float _modelBase = -0.4f;
+    private readonly float _dirLength = 0.2f;
+
     public CameraRenderer(GL gl)
     {
         _gl = gl;
@@ -24,12 +29,12 @@ public class CameraRenderer : IDisposable
         // simple pyramid (camera shape)
         float[] vertices =
         [
-            // pos              normal  uv   tangent
-             0, 0, 0,           0,1,0,  0,0,  1,0,0,
-            -0.2f,-0.2f,-0.4f,  0,1,0,  0,0,  1,0,0,
-             0.2f,-0.2f,-0.4f,  0,1,0,  0,0,  1,0,0,
-             0.2f, 0.2f,-0.4f,  0,1,0,  0,0,  1,0,0,
-            -0.2f, 0.2f,-0.4f,  0,1,0,  0,0,  1,0,0
+            // pos                   normal  uv   tangent
+             0, 0, 0,                0,1,0,  0,0,  1,0,0,
+            -0.2f,-0.2f,_modelBase,  0,1,0,  0,0,  1,0,0,
+             0.2f,-0.2f,_modelBase,  0,1,0,  0,0,  1,0,0,
+             0.2f, 0.2f,_modelBase,  0,1,0,  0,0,  1,0,0,
+            -0.2f, 0.2f,_modelBase,  0,1,0,  0,0,  1,0,0
         ];
 
         uint[] indices =
@@ -59,7 +64,7 @@ public class CameraRenderer : IDisposable
         {
             _gl.BufferData(
                 BufferTargetARB.ArrayBuffer,
-                (nuint)(2 * 3 * sizeof(float)), 
+                2 * 3 * sizeof(float), 
                 null,
                 BufferUsageARB.DynamicDraw
             );
@@ -100,7 +105,7 @@ public class CameraRenderer : IDisposable
     private void RenderCamera(Camera cam)
     {
         var model =
-            Matrix4x4.CreateScale(0.5f) *
+            Matrix4x4.CreateScale(_scale) *
             Matrix4x4.CreateWorld(cam.Position, cam.Forward, cam.Up);
 
         _shader.SetUniform("uModel", model);
@@ -122,11 +127,10 @@ public class CameraRenderer : IDisposable
     {
         _shader.SetUniform("uModel", Matrix4x4.Identity);
         _shader.SetUniform("uColor", _dirColor);
-
         
-        float tipOffset = 0.4f * 0.5f; 
-        Vector3 start = cam.Position + cam.Forward * tipOffset;
-        Vector3 end   = cam.Position + cam.Forward * 0.5f;
+        var tipOffset = Math.Abs(_modelBase) * _scale; 
+        var start = cam.Position + cam.Forward * tipOffset;
+        var end   = start + cam.Forward * _dirLength;
 
         float[] vertices =
         [
@@ -151,7 +155,6 @@ public class CameraRenderer : IDisposable
         }
 
         _gl.BindVertexArray(_lineVao);
-
         _gl.DrawArrays(PrimitiveType.Lines, 0, 2);
     }
 

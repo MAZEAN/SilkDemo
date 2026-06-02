@@ -1,8 +1,9 @@
-namespace SimpleTerrain.Rendering;
+namespace SimpleTerrain.Rendering.Renderers;
 
 using Silk.NET.OpenGL;
 using Scene;
 using Config;
+using Resources;
 
 public class GridRenderer : IDisposable
 {
@@ -55,12 +56,10 @@ public class GridRenderer : IDisposable
     private void SetDebugRenderState()
     {
         _gl.DepthFunc(GLEnum.Lequal);
-        _gl.DepthMask(false);
     }
 
     private void RestoreRenderState()
     {
-        _gl.DepthMask(true);
         _gl.DepthFunc(DepthFunction.Less);
     }
 
