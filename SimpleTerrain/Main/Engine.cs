@@ -20,6 +20,7 @@ public class Engine
     private Scene _scene = null!;
     private GridRenderer _grid = null!;
     private SceneLoader _sceneLoader = null!;
+    private CameraRenderer _cameraRenderer;
     
     private int _frameCount;
     private double _fpsTimer;
@@ -84,6 +85,7 @@ public class Engine
             _input.Initialize();
             
             _grid = new GridRenderer(_gl, _config.Window);
+            _cameraRenderer = new CameraRenderer(_gl);
         }
         catch (Exception e)
         {
@@ -165,6 +167,7 @@ public class Engine
         
         _grid.Render(_scene.GetActiveCamera());
         _renderer.Render(_scene, (float) deltaTime);
+        _cameraRenderer.Render(_scene);
     }
     
     private void OnResize(Vector2D<int> size)
@@ -180,5 +183,6 @@ public class Engine
         _scene.Dispose();
         _grid.Dispose();
         _sceneLoader.Dispose();
+        _cameraRenderer.Dispose();
     }
 }

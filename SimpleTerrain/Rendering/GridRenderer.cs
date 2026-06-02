@@ -1,7 +1,8 @@
 namespace SimpleTerrain.Rendering;
+
 using Silk.NET.OpenGL;
-using SimpleTerrain.Scene;
-using SimpleTerrain.Config;
+using Scene;
+using Config;
 
 public class GridRenderer : IDisposable
 {
@@ -34,7 +35,7 @@ public class GridRenderer : IDisposable
 
     public void Render(Camera camera)
     {
-        SetGL();
+        SetDebugRenderState();
 
         _shader.Use();
         _shader.SetUniform("uView",        camera.GetViewMatrix());
@@ -48,16 +49,16 @@ public class GridRenderer : IDisposable
                 DrawElementsType.UnsignedInt, (void*)0);
         }
 
-        RestoreGL();
+        RestoreRenderState();
     }
 
-    private void SetGL()
+    private void SetDebugRenderState()
     {
         _gl.DepthFunc(GLEnum.Lequal);
         _gl.DepthMask(false);
     }
 
-    private void RestoreGL()
+    private void RestoreRenderState()
     {
         _gl.DepthMask(true);
         _gl.DepthFunc(DepthFunction.Less);
