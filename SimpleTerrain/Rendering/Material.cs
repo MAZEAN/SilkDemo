@@ -1,4 +1,5 @@
 namespace SimpleTerrain.Rendering;
+
 using System.Numerics;
 
 public class Material : IDisposable

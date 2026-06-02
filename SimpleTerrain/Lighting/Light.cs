@@ -1,4 +1,5 @@
 namespace SimpleTerrain.Lighting;
+
 using System.Numerics;
 
 public abstract class Light

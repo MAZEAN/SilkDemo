@@ -2,7 +2,7 @@ namespace SimpleTerrain.Rendering;
 
 using Silk.NET.OpenGL;
 using System.Numerics;
-using SimpleTerrain.Scene;
+using Scene;
 
 public class CameraRenderer : IDisposable
 {
@@ -68,9 +68,8 @@ public class CameraRenderer : IDisposable
             Matrix4x4.CreateWorld(cam.Position, cam.Forward, cam.Up);
 
         _shader.SetUniform("uModel", model);
-
+        
         _mesh.Bind();
-
         unsafe
         {
             _gl.DrawElements(
@@ -93,8 +92,7 @@ public class CameraRenderer : IDisposable
         _gl.Enable(EnableCap.CullFace);
         _gl.Enable(EnableCap.DepthTest);
     }
-
-
+    
     public void Dispose()
     {
         _mesh.Dispose();
