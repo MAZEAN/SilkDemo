@@ -87,6 +87,44 @@ public class Camera
         _aspectRatio = (float) newSize.X / newSize.Y;
     }
     
+    public Vector3[] GetFrustumCorners()
+    {
+        float fov = MathHelper.DegreesToRadians(_zoom);
+        float tanFov = MathF.Tan(fov / 2f);
+
+        float near = _config.Near;
+        float far  = 100f;
+
+        float nearHeight = 2f * tanFov * near;
+        float nearWidth  = nearHeight * _aspectRatio;
+
+        float farHeight = 2f * tanFov * far;
+        float farWidth  = farHeight * _aspectRatio;
+
+        Vector3 forward = Forward;
+        Vector3 right   = Right;
+        Vector3 up      = Up;
+
+        Vector3 nearCenter = Position + forward * near;
+        Vector3 farCenter  = Position + forward * far;
+
+        Vector3[] corners = new Vector3[8];
+
+        // near plane
+        corners[0] = nearCenter + up * (nearHeight * 0.5f) - right * (nearWidth * 0.5f);
+        corners[1] = nearCenter + up * (nearHeight * 0.5f) + right * (nearWidth * 0.5f);
+        corners[2] = nearCenter - up * (nearHeight * 0.5f) - right * (nearWidth * 0.5f);
+        corners[3] = nearCenter - up * (nearHeight * 0.5f) + right * (nearWidth * 0.5f);
+
+        // far plane
+        corners[4] = farCenter + up * (farHeight * 0.5f) - right * (farWidth * 0.5f);
+        corners[5] = farCenter + up * (farHeight * 0.5f) + right * (farWidth * 0.5f);
+        corners[6] = farCenter - up * (farHeight * 0.5f) - right * (farWidth * 0.5f);
+        corners[7] = farCenter - up * (farHeight * 0.5f) + right * (farWidth * 0.5f);
+
+        return corners;
+    }
+    
     public Matrix4x4 GetViewMatrix()
     {
         return Matrix4x4.CreateLookAt(_position, _position + _forward, _up);

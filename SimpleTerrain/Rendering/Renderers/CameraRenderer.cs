@@ -14,8 +14,9 @@ public class CameraRenderer : IDisposable
     private uint _lineVao;
     private uint _lineVbo;
 
-    private readonly Vector3 _cameraColor = new(1.0f, 0.5f, 0.0f);
-    private readonly Vector3 _dirColor = new(1.0f, 1.0f, 1.0f);
+    private readonly Vector3 _cameraColor  = new(1.0f, 0.5f, 0.0f);
+    private readonly Vector3 _dirColor     = new(1.0f, 1.0f, 1.0f);
+    private readonly Vector3 _frustumColor = new(1f, 1f, 0f);
 
     private readonly float _scale = 0.5f;
     private readonly float _modelBase = -0.4f;
@@ -97,6 +98,7 @@ public class CameraRenderer : IDisposable
 
             RenderCamera(cam);
             DrawDirectionLine(cam);
+            DrawFrustum(cam);
         }
         
         RestoreRenderState();
@@ -157,7 +159,50 @@ public class CameraRenderer : IDisposable
         _gl.BindVertexArray(_lineVao);
         _gl.DrawArrays(PrimitiveType.Lines, 0, 2);
     }
+    
+    private void DrawFrustum(Camera cam)
+    {
+        _shader.SetUniform("uModel", Matrix4x4.Identity);
+        _shader.SetUniform("uColor", _frustumColor);
 
+        var c = cam.GetFrustumCorners();
+
+        // edges (12 lines)
+        int[] indices =
+        [
+            0,1, 1,3, 3,2, 2,0, // near
+            4,5, 5,7, 7,6, 6,4, // far
+            0,4, 1,5, 2,6, 3,7  // connections
+        ];
+
+        float[] vertices = new float[indices.Length * 3];
+
+        for (int i = 0; i < indices.Length; i++)
+        {
+            var p = c[indices[i]];
+            vertices[i * 3 + 0] = p.X;
+            vertices[i * 3 + 1] = p.Y;
+            vertices[i * 3 + 2] = p.Z;
+        }
+
+        _gl.BindVertexArray(_lineVao);
+        _gl.BindBuffer(BufferTargetARB.ArrayBuffer, _lineVbo);
+
+        unsafe
+        {
+            fixed (float* v = vertices)
+            {
+                _gl.BufferData(
+                    BufferTargetARB.ArrayBuffer,
+                    (nuint)(vertices.Length * sizeof(float)),
+                    v,
+                    BufferUsageARB.DynamicDraw
+                );
+            }
+        }
+
+        _gl.DrawArrays(PrimitiveType.Lines, 0, (uint)indices.Length);
+    }
     
     private void SetDebugRenderState()
     {
