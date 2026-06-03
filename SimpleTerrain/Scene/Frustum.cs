@@ -7,11 +7,17 @@ using Utils;
 
 public class Frustum
 {
+    private readonly Camera _camera;
     public Plane[] Planes { get; } = new Plane[6];
-
-    public Frustum(Matrix4x4 view, Matrix4x4 projection)
+    
+    public Frustum(Camera camera)
     {
-        var vp = view * projection;
+        _camera = camera;
+    }
+
+    public void BuildFrustumPlanes()
+    {
+        var vp = _camera.GetViewMatrix() * _camera.GetProjectionMatrix();
 
         Planes[0] = CreatePlane(vp.M14 + vp.M11, vp.M24 + vp.M21, vp.M34 + vp.M31, vp.M44 + vp.M41); // left
         Planes[1] = CreatePlane(vp.M14 - vp.M11, vp.M24 - vp.M21, vp.M34 - vp.M31, vp.M44 - vp.M41); // right
@@ -29,26 +35,27 @@ public class Frustum
         return new Plane(normal / length, d / length);
     }
     
-    public static Vector3[] GetFrustumCorners(Camera camera)
+    // Only used for visualization
+    public Vector3[] GetFrustumCorners()
     {
-        float fov = MathHelper.DegreesToRadians(camera.Zoom);
+        float fov = MathHelper.DegreesToRadians(_camera.Zoom);
         float tanFov = MathF.Tan(fov / 2f);
 
         float near = 0.1f;
         float far  = 100f;
 
         float nearHeight = 2f * tanFov * near;
-        float nearWidth  = nearHeight * camera.AspectRatio;
+        float nearWidth  = nearHeight * _camera.AspectRatio;
 
         float farHeight = 2f * tanFov * far;
-        float farWidth  = farHeight * camera.AspectRatio;
+        float farWidth  = farHeight * _camera.AspectRatio;
 
-        Vector3 forward = camera.Forward;
-        Vector3 right   = camera.Right;
-        Vector3 up      = camera.Up;
+        Vector3 forward = _camera.Forward;
+        Vector3 right   = _camera.Right;
+        Vector3 up      = _camera.Up;
 
-        Vector3 nearCenter = camera.Position + forward * near;
-        Vector3 farCenter  = camera.Position + forward * far;
+        Vector3 nearCenter = _camera.Position + forward * near;
+        Vector3 farCenter  = _camera.Position + forward * far;
 
         Vector3[] corners = new Vector3[8];
 
@@ -65,5 +72,21 @@ public class Frustum
         corners[7] = farCenter - up * (farHeight * 0.5f) + right * (farWidth * 0.5f);
 
         return corners;
+    }
+    
+    public bool IsVisible(Entity entity)
+    {
+        Vector3 position = entity.Transform.WorldMatrix.Translation;
+        float radius = entity.BoundingRadius;
+
+        foreach (var plane in Planes)
+        {
+            float distance = Vector3.Dot(plane.Normal, position) + plane.D;
+
+            if (distance < -radius)
+                return false;
+        }
+
+        return true;
     }
 }

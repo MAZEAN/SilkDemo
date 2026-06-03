@@ -121,7 +121,7 @@ public class InputSystem
             ResetActiveController();
         }
         
-        if (key == Key.C)
+        if (key == Key.AltRight)
             _scene.ToggleEnableCulling();
     }
     

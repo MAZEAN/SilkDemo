@@ -25,6 +25,8 @@ public class Camera
     private float _pitch;
     public float Zoom { get; private set;}
     public float AspectRatio { get; private set;}
+    
+    public Frustum Frustum { get; private set;}
 
     public Camera(CameraConfig config, string name, Vector3 position, Vector3 worldUp, float yaw, float pitch)
     {
@@ -37,6 +39,8 @@ public class Camera
         _yaw = yaw;
         _pitch = pitch;
         Zoom = config.FOV;
+
+        Frustum = new Frustum(this);
 
         UpdateVectors();
     }

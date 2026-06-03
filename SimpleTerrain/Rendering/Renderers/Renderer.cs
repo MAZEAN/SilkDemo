@@ -30,10 +30,7 @@ public class Renderer
         var viewCamera = scene.GetActiveCamera(); 
         var cullingCamera = scene.GetPrimaryCamera();
         
-        var frustum = new Frustum(
-            cullingCamera.GetViewMatrix(),
-            cullingCamera.GetProjectionMatrix()
-        );
+        cullingCamera.Frustum.BuildFrustumPlanes();
         
         var view = viewCamera.GetViewMatrix();
         var cameraPosition = viewCamera.Position;
@@ -54,7 +51,7 @@ public class Renderer
 
             foreach (var entity in entities)
             {
-                if (scene.EnableCulling && !IsVisible(entity, frustum.Planes))
+                if (scene.EnableCulling && !cullingCamera.Frustum.IsVisible(entity))
                     continue;
 
                 var mat = entity.Material;
@@ -245,22 +242,6 @@ public class Renderer
             shader.SetUniform($"uSpotLights[{i}].innerCutoff", MathF.Cos(light.InnerCutoff * MathF.PI / 180f));
             shader.SetUniform($"uSpotLights[{i}].outerCutoff", MathF.Cos(light.OuterCutoff * MathF.PI / 180f));
         }
-    }
-    
-    private bool IsVisible(Entity entity, Plane[] planes)
-    {
-        Vector3 position = entity.Transform.WorldMatrix.Translation;
-        float radius = entity.BoundingRadius;
-
-        foreach (var plane in planes)
-        {
-            float distance = Vector3.Dot(plane.Normal, position) + plane.D;
-
-            if (distance < -radius)
-                return false;
-        }
-
-        return true;
     }
 
     private void InitializeTextureCache()
