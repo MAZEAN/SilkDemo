@@ -7,32 +7,27 @@ using Silk.NET.OpenGL;
 using Rendering.Resources;
 using Lighting;
 using Config;
-using Utils;
+using Rendering;
 
-public class SceneLoader : IDisposable
+public class SceneLoader
 {
-    private readonly GL _gl;
+    private readonly ResourceSystem _resourceSystem;
     private readonly Scene _scene;
-    private readonly string _path;
     private readonly AppConfig _config;
     
-    private AssetCache<GLTexture> _textures;
-    private AssetCache<GLShader> _shaders;
-    private AssetCache<Model> _models;
+    private readonly string _path;
     
     private static readonly JsonSerializerOptions Options = new()
     {
         PropertyNameCaseInsensitive = true
     };
 
-    public SceneLoader(GL gl, Scene scene, AppConfig config)
+    public SceneLoader(ResourceSystem resourceManager, Scene scene, AppConfig config)
     {
-        _gl = gl;
+        _resourceSystem = resourceManager;
         _scene = scene;
         _path = config.Render.ScenePath;
         _config = config;
-        
-        InitializeCaches();
     }
 
     public void Load()
@@ -50,7 +45,7 @@ public class SceneLoader : IDisposable
     {
         foreach (var e in def.Entities)
         {
-            var model = _models.Get(e.Model);
+            var model = _resourceSystem.Models.Get(e.Model);
             var material = e.Material != null
                 ? LoadMaterialFile(e.Material)
                 : throw new Exception($"Entity '{e.Name}' must have a material file.");
@@ -149,41 +144,21 @@ public class SceneLoader : IDisposable
         var def  = JsonSerializer.Deserialize<MaterialDefinition>(json, Options)
                    ?? throw new Exception($"Failed to deserialize material file: {path}");
 
-        var shader = _shaders.Get(def.Shader);
+        var shader = _resourceSystem.Shaders.Get(def.Shader);
 
         return new Material(shader)
         {
-            Albedo    = def.Albedo    != null ? _textures!.Get(def.Albedo)    : null,
-            Normal    = def.Normal    != null ? _textures!.Get(def.Normal)    : null,
-            Roughness = def.Roughness != null ? _textures!.Get(def.Roughness) : null,
-            Metallic  = def.Metallic  != null ? _textures!.Get(def.Metallic)  : null,
-            AO        = def.AO        != null ? _textures!.Get(def.AO)        : null,
+            Albedo    = def.Albedo    != null ? _resourceSystem.Textures!.Get(def.Albedo)    : null,
+            Normal    = def.Normal    != null ? _resourceSystem.Textures!.Get(def.Normal)    : null,
+            Roughness = def.Roughness != null ? _resourceSystem.Textures!.Get(def.Roughness) : null,
+            Metallic  = def.Metallic  != null ? _resourceSystem.Textures!.Get(def.Metallic)  : null,
+            AO        = def.AO        != null ? _resourceSystem.Textures!.Get(def.AO)        : null,
             RoughnessValue = def.RoughnessValue,
             MetallicValue  = def.MetallicValue,
             Color          = new Vector4(def.Color[0],   def.Color[1],   def.Color[2],   def.Color[3]),
             UvScale        = new Vector2(def.UvScale[0],  def.UvScale[1]),
             UvOffset       = new Vector2(def.UvOffset[0], def.UvOffset[1])
         };
-    }
-
-    private void InitializeCaches()
-    {
-        _textures = new AssetCache<GLTexture>(
-            _config.Render.TextureCacheSize,
-            path => new GLTexture(_gl, Path.GetFullPath(path))
-        );
-
-        _shaders = new AssetCache<GLShader>(
-            _config.Render.ShaderCacheSize,
-            shaderBase =>
-                new GLShader(
-                    _gl,
-                    shaderBase + ".vert",
-                    shaderBase + ".frag"));
-
-        _models = new AssetCache<Model>(
-            _config.Render.ModelCacheSize,
-            path => new Model(_gl, path));
     }
     
     private static Vector3 ParseUp(string axis)
@@ -195,12 +170,5 @@ public class SceneLoader : IDisposable
             "Z" => Vector3.UnitZ,
             _ => throw new Exception($"Invalid up axis: {axis}")
         };
-    }
-
-    public void Dispose()
-    {
-        _textures.Dispose();
-        _shaders.Dispose();
-        _models.Dispose();
     }
 }

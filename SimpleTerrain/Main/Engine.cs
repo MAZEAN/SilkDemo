@@ -7,6 +7,7 @@ using Config;
 using Scene;
 using Rendering.Renderers;
 using Input;
+using Rendering;
 
 public class Engine
 {
@@ -17,6 +18,7 @@ public class Engine
     private InputSystem _input = null!;
     private Scene _scene = null!;
     private GridRenderer _grid = null!;
+    private ResourceSystem _resourceSystem = null!;
     private SceneLoader _sceneLoader = null!;
     private CameraRenderer _cameraRenderer = null!;
     
@@ -73,7 +75,9 @@ public class Engine
 
             _renderer = new Renderer(_gl, _config);
 
-            _sceneLoader = new SceneLoader(_gl, _scene, _config);
+            _resourceSystem = new ResourceSystem(_gl, _config);
+
+            _sceneLoader = new SceneLoader(_resourceSystem, _scene, _config);
             _sceneLoader.Load();
             
             foreach (var cam in _scene.Cameras)
@@ -180,7 +184,7 @@ public class Engine
     {
         _scene.Dispose();
         _grid.Dispose();
-        _sceneLoader.Dispose();
+        _resourceSystem.Dispose();
         _cameraRenderer.Dispose();
     }
 }

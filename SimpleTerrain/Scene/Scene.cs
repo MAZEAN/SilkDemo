@@ -5,20 +5,10 @@ using Rendering.Resources;
 
 public class Scene
 {
-    // -----------------------------
-    // Entities
-    // -----------------------------
     private readonly List<Entity> _entities = new();
     public IReadOnlyList<Entity> Entities => _entities;
-
-    // -----------------------------
-    // Lighting
-    // -----------------------------
     public LightingSystem Lighting { get; } = new();
-
-    // -----------------------------
-    // Shader grouping
-    // -----------------------------
+    
     private readonly Dictionary<GLShader, List<Entity>> _shaderGroups = new();
     private bool _shaderGroupsDirty = true;
 
@@ -42,7 +32,7 @@ public class Scene
             list.Add(entity);
         }
 
-        // ✅ sort per shader group
+        // sort per shader group
         foreach (var list in _shaderGroups.Values)
         {
             list.Sort((a, b) =>
@@ -64,10 +54,7 @@ public class Scene
         _entities.Remove(entity);
         _shaderGroupsDirty = true;
     }
-
-    // -----------------------------
-    // Cameras
-    // -----------------------------
+    
     private readonly List<Camera> _cameras = new();
     public IReadOnlyList<Camera> Cameras => _cameras;
 
@@ -114,10 +101,7 @@ public class Scene
 
         _activeCamera = _cameras[index];
     }
-
-    // -----------------------------
-    // Cleanup
-    // -----------------------------
+    
     public void Dispose()
     {
         foreach (var entity in _entities)
