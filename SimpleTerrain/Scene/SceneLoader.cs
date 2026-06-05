@@ -2,17 +2,15 @@ namespace SimpleTerrain.Scene;
 
 using System.Text.Json;
 using System.Numerics;
-using Silk.NET.OpenGL;
 
 using Rendering.Resources;
-using Lighting;
 using Config;
 using Rendering;
 
 public class SceneLoader
 {
     private readonly ResourceSystem _resourceSystem;
-    private readonly Scene _scene;
+    private readonly World _world;
     private readonly AppConfig _config;
     
     private readonly string _path;
@@ -22,10 +20,10 @@ public class SceneLoader
         PropertyNameCaseInsensitive = true
     };
 
-    public SceneLoader(ResourceSystem resourceManager, Scene scene, AppConfig config)
+    public SceneLoader(ResourceSystem resourceManager, World world, AppConfig config)
     {
         _resourceSystem = resourceManager;
-        _scene = scene;
+        _world = world;
         _path = config.Render.ScenePath;
         _config = config;
     }
@@ -58,7 +56,7 @@ public class SceneLoader
             if (e.Rotation is { Length: 3 })
                 entity.Transform.SetEulerAngles(e.Rotation[0], e.Rotation[1], e.Rotation[2]);
 
-            _scene.AddEntity(entity);
+            _world.AddEntity(entity);
         }
     }
 
@@ -66,7 +64,7 @@ public class SceneLoader
     {
         foreach (var d in def.Lights.Directional)
         {
-            _scene.Lighting.Add(new DirectionalLight
+            _world.Lighting.Add(new DirectionalLight
             {
                 Direction = new Vector3(d.Direction[0], d.Direction[1], d.Direction[2]),
                 Color     = new Vector3(d.Color[0],     d.Color[1],     d.Color[2]),
@@ -77,7 +75,7 @@ public class SceneLoader
 
         foreach (var p in def.Lights.Point)
         {
-            _scene.Lighting.Add(new PointLight
+            _world.Lighting.Add(new PointLight
             {
                 Position  = new Vector3(p.Position[0], p.Position[1], p.Position[2]),
                 Color     = new Vector3(p.Color[0],    p.Color[1],    p.Color[2]),
@@ -91,7 +89,7 @@ public class SceneLoader
 
         foreach (var s in def.Lights.Spot)
         {
-            _scene.Lighting.Add(new SpotLight
+            _world.Lighting.Add(new SpotLight
             {
                 Position    = new Vector3(s.Position[0],  s.Position[1],  s.Position[2]),
                 Direction   = new Vector3(s.Direction[0], s.Direction[1], s.Direction[2]),
@@ -117,7 +115,7 @@ public class SceneLoader
                 c.Pitch
             );
 
-            _scene.AddCamera(camera);
+            _world.AddCamera(camera);
         }
         
         if (def.Cameras.Count == 0)
@@ -130,11 +128,11 @@ public class SceneLoader
         
         if (primary != null)
         {
-            _scene.SetActiveCamera(primaryName);
+            _world.SetActiveCamera(primaryName);
         }
         else
         {
-            _scene.SetActiveCamera(def.Cameras[0].Name);
+            _world.SetActiveCamera(def.Cameras[0].Name);
         }
     }
 

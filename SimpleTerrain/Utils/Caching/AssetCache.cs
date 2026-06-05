@@ -1,4 +1,4 @@
-namespace SimpleTerrain.Utils;
+namespace SimpleTerrain.Utils.Caching;
 
 public sealed class AssetCache<T> : IDisposable where T : class, IDisposable
 {

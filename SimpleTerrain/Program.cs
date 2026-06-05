@@ -1,4 +1,4 @@
-﻿namespace SimpleTerrain.Main;
+﻿namespace SimpleTerrain;
 
 class Program
 {

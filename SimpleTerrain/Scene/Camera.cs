@@ -1,13 +1,10 @@
-using Silk.NET.Assimp;
-
 namespace SimpleTerrain.Scene;
 
 using System.Numerics;
 using Silk.NET.Maths;
-using Plane = System.Numerics.Plane;
 
 using Config;
-using Utils;
+using Utils.Math;
 
 public class Camera
 {

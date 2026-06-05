@@ -1,4 +1,4 @@
-namespace SimpleTerrain.Core;
+namespace SimpleTerrain.Rendering.Core;
 
 using System.Numerics;
 

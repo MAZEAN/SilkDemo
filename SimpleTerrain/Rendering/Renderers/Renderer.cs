@@ -4,7 +4,6 @@ using Silk.NET.OpenGL;
 using Config;
 using Scene;
 using System.Numerics;
-using Lighting;
 using Resources;
 
 public class Renderer
@@ -25,19 +24,19 @@ public class Renderer
         InitializeTextureCache();
     }
 
-    public void Render(Scene scene, float deltaTime)
+    public void Render(World world, float deltaTime)
     {
-        var viewCamera = scene.GetActiveCamera(); 
-        var cullingCamera = scene.GetPrimaryCamera();
+        var viewCamera = world.GetActiveCamera(); 
+        var cullingCamera = world.GetPrimaryCamera();
         
         cullingCamera.Frustum.BuildFrustumPlanes();
         
         var view = viewCamera.GetViewMatrix();
         var cameraPosition = viewCamera.Position;
         
-        bool lightingDirty = scene.Lighting.IsDirty;
+        bool lightingDirty = world.Lighting.IsDirty;
 
-        foreach (var (shader, entities) in scene.GetEntitiesByShader())
+        foreach (var (shader, entities) in world.GetEntitiesByShader())
         {
             shader.Use();
             
@@ -47,11 +46,11 @@ public class Renderer
             UploadGlobalUniforms(shader, viewCamera);
 
             if (lightingDirty)
-                UploadLighting(shader, scene.Lighting);
+                UploadLighting(shader, world.Lighting);
 
             foreach (var entity in entities)
             {
-                if (scene.EnableCulling && !cullingCamera.Frustum.IsVisible(entity))
+                if (world.EnableCulling && !cullingCamera.Frustum.IsVisible(entity))
                     continue;
 
                 var mat = entity.Material;
@@ -78,7 +77,7 @@ public class Renderer
         }
 
         if (lightingDirty)
-            scene.Lighting.ClearDirty();
+            world.Lighting.ClearDirty();
     }
     
     // -----------------------------

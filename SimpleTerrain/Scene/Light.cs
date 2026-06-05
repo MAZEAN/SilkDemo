@@ -1,4 +1,4 @@
-namespace SimpleTerrain.Lighting;
+namespace SimpleTerrain.Scene;
 
 using System.Numerics;
 

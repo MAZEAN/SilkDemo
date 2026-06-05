@@ -11,16 +11,16 @@ using Scene;
 public class InputSystem
 {
     private readonly IWindow _window;
-    private readonly Scene _scene;
+    private readonly World _world;
     private readonly AppConfig _config;
     
     private readonly Dictionary<Camera, CameraController> _controllers = new();
     private IKeyboard _keyboard= null!;
     
-    public InputSystem(IWindow window, Scene scene, AppConfig config)
+    public InputSystem(IWindow window, World world, AppConfig config)
     {
         _window = window;
-        _scene = scene;
+        _world = world;
         _config = config;
     }
 
@@ -46,7 +46,7 @@ public class InputSystem
     public void UpdateMovement(float deltaTime)
     {
         var moveSpeed = _config.MoveSpeed * deltaTime;
-        var camera = _scene.GetActiveCamera();
+        var camera = _world.GetActiveCamera();
 
         if (_keyboard.IsKeyPressed(Key.W))
         {
@@ -82,7 +82,7 @@ public class InputSystem
     
     private void OnMouseMove(IMouse mouse, Vector2 position)
     {
-        var cam = _scene.GetActiveCamera();
+        var cam = _world.GetActiveCamera();
         if (!_controllers.TryGetValue(cam, out var controller))
         {
             controller = new CameraController(cam, _config.Camera);
@@ -94,7 +94,7 @@ public class InputSystem
     
     private void OnMouseWheel(IMouse mouse, ScrollWheel scroll)
     {
-        var cam = _scene.GetActiveCamera();
+        var cam = _world.GetActiveCamera();
         if (!_controllers.TryGetValue(cam, out var controller))
         {
             controller = new CameraController(cam, _config.Camera);
@@ -117,12 +117,12 @@ public class InputSystem
 
         if (key == Key.Tab)
         {
-            _scene.CycleCamera();
+            _world.CycleCamera();
             ResetActiveController();
         }
         
         if (key == Key.AltRight)
-            _scene.ToggleEnableCulling();
+            _world.ToggleEnableCulling();
     }
     
     private CameraController GetController(Camera cam)
@@ -138,13 +138,13 @@ public class InputSystem
     
     private void SwitchCamera(string name)
     {
-        _scene.SetActiveCamera(name);
+        _world.SetActiveCamera(name);
         ResetActiveController();
     }
 
     private void ResetActiveController()
     {
-        var cam = _scene.GetActiveCamera();
+        var cam = _world.GetActiveCamera();
         var controller = GetController(cam);
 
         controller.Reset();

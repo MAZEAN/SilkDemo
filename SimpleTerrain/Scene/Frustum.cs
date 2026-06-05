@@ -3,7 +3,7 @@ namespace SimpleTerrain.Scene;
 using System.Numerics;
 using Plane = System.Numerics.Plane;
 
-using Utils;
+using Utils.Math;
 using Config;
 
 public class Frustum

@@ -80,18 +80,18 @@ public class CameraRenderer : IDisposable
         _gl.BindVertexArray(0);
     }
 
-    public void Render(Scene scene)
+    public void Render(World world)
     {
         SetDebugRenderState();
         
-        var activeCamera = scene.GetActiveCamera();
+        var activeCamera = world.GetActiveCamera();
         
         _shader.Use();
 
         _shader.SetUniform("uView", activeCamera.GetViewMatrix());
         _shader.SetUniform("uProjection", activeCamera.GetProjectionMatrix());
 
-        foreach (var cam in scene.Cameras)
+        foreach (var cam in world.Cameras)
         {
             if (cam == activeCamera)
                 continue;

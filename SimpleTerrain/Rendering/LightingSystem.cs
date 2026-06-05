@@ -1,4 +1,6 @@
-namespace SimpleTerrain.Lighting;
+namespace SimpleTerrain.Rendering;
+
+using Scene;
 
 public class LightingSystem
 {

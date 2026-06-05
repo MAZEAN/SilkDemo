@@ -2,7 +2,7 @@ namespace SimpleTerrain.Rendering;
 
 using Silk.NET.OpenGL;
 
-using Utils;
+using Utils.Caching;
 using Resources;
 using Config;
 

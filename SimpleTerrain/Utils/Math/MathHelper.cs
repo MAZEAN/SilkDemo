@@ -1,4 +1,4 @@
-namespace SimpleTerrain.Utils;
+namespace SimpleTerrain.Utils.Math;
 
 using System;
 
