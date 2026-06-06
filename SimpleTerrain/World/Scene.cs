@@ -3,6 +3,7 @@ namespace SimpleTerrain.World;
 using Rendering.Resources;
 using Config;
 using Rendering.Systems;
+using Rendering.Renderers;
 
 public class Scene
 {
@@ -10,12 +11,11 @@ public class Scene
     private readonly List<Entity> _entities = new();
     public IReadOnlyList<Entity> Entities => _entities;
     public LightingSystem Lighting { get; } = new();
+    public RenderSettings Settings { get; } = new();
     
     private readonly Dictionary<GLShader, List<Entity>> _shaderGroups = new();
     
     private bool _shaderGroupsDirty = true;
-
-    public bool EnableCulling { get; private set; } = true;
 
     public Scene(AppConfig config)
     {
@@ -115,11 +115,6 @@ public class Scene
         index = (index + 1) % _cameras.Count;
 
         _activeCamera = _cameras[index];
-    }
-
-    public void ToggleEnableCulling()
-    {
-        EnableCulling = !EnableCulling;
     }
     
     public void Dispose()

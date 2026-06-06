@@ -51,7 +51,7 @@ public class Renderer
 
             foreach (var entity in entities)
             {
-                if (scene.EnableCulling && !cullingCamera.Frustum.IsVisibleAABB(entity.GetWorldBounds()))
+                if (scene.Settings.EnableCulling && !cullingCamera.Frustum.IsVisibleAABB(entity.GetWorldBounds()))
                     continue;
 
                 var mat = entity.Material;

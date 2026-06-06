@@ -106,23 +106,45 @@ public class InputSystem
     
     private void OnKeyDown(IKeyboard keyboard, Key key, int code)
     {
-        if (key == Key.Escape)
-            _window.Close();
-
-        if (key == Key.F1)
-            SwitchCamera("Main");
-
-        if (key == Key.F2)
-            SwitchCamera("Debug");
-
-        if (key == Key.Tab)
+        switch (key)
         {
-            _scene.CycleCamera();
-            ResetActiveController();
+            case Key.Escape:
+                _window.Close();
+                break;
+
+            case Key.Number0:
+                SwitchCamera("Main");
+                break;
+
+            case Key.Number1:
+                SwitchCamera("Debug");
+                break;
+
+            case Key.Tab:
+                _scene.CycleCamera();
+                ResetActiveController();
+                break;
+            
+            case Key.F1:
+            case Key.F2:
+            case Key.F3:
+            case Key.F4:
+            case Key.F5:
+                HandleDebugToggle(key);
+                break;
         }
-        
-        if (key == Key.AltRight)
-            _scene.ToggleEnableCulling();
+    }
+    
+    private void HandleDebugToggle(Key key)
+    {
+        switch (key)
+        {
+            case Key.F1: _scene.Settings.ToggleShowDebugView(); break;
+            case Key.F2: _scene.Settings.ToggleShowBoundingBoxes(); break;
+            case Key.F3: _scene.Settings.ToggleShowFrustums(); break;
+            case Key.F4: _scene.Settings.ToggleShowCameras(); break;
+            case Key.F5: _scene.Settings.ToggleEnableCulling(); break;
+        }
     }
     
     private CameraController GetController(Camera cam)

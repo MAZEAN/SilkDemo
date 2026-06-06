@@ -34,25 +34,6 @@ public readonly struct BoundingBox
         return new BoundingBox(center - newExtents, center + newExtents);
     }
     
-    private static Vector3[] GetCorners(BoundingBox box)
-    {
-        var min = box.Min;
-        var max = box.Max;
-
-        return new[]
-        {
-            new Vector3(min.X, min.Y, min.Z),
-            new Vector3(max.X, min.Y, min.Z),
-            new Vector3(min.X, max.Y, min.Z),
-            new Vector3(max.X, max.Y, min.Z),
-
-            new Vector3(min.X, min.Y, max.Z),
-            new Vector3(max.X, min.Y, max.Z),
-            new Vector3(min.X, max.Y, max.Z),
-            new Vector3(max.X, max.Y, max.Z),
-        };
-    }
-    
     public bool Contains(Vector3 point) =>
         point.X >= Min.X && point.X <= Max.X &&
         point.Y >= Min.Y && point.Y <= Max.Y &&
