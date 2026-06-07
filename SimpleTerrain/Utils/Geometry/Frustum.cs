@@ -32,6 +32,8 @@ public class Frustum
         Planes[3] = CreatePlane(vp.M14 - vp.M12, vp.M24 - vp.M22, vp.M34 - vp.M32, vp.M44 - vp.M42); // top
         Planes[4] = CreatePlane(vp.M13, vp.M23, vp.M33, vp.M43);                                     // near
         Planes[5] = CreatePlane(vp.M14 - vp.M13, vp.M24 - vp.M23, vp.M34 - vp.M33, vp.M44 - vp.M43); // far
+        
+        _camera.ClearFrustumDirty();
     }
 
     private static Plane CreatePlane(float a, float b, float c, float d)

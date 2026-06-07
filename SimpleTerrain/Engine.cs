@@ -157,8 +157,8 @@ public class Engine
     
     private void OnClose()
     {
+        _renderingSystem.Dispose();
         _scene.Dispose();
         _resourceSystem.Dispose();
-        _renderingSystem.Dispose();
     }
 }

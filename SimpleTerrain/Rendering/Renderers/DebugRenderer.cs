@@ -42,7 +42,7 @@ public class DebugRenderer : IDisposable
     public DebugRenderer(GL gl)
     {
         _gl         = gl;
-        _shader     = _shader = new GLShader(gl,
+        _shader = new GLShader(gl,
             AssetPath.Resolve("Assets/Shaders/debug.vert"),
             AssetPath.Resolve("Assets/Shaders/debug.frag"));
         _cameraMesh = BuildCameraMesh(gl);

@@ -82,8 +82,8 @@ public class RenderingSystem : IDisposable
 
     public void Dispose()
     {
+        _imGui?.Dispose();
         _gridRenderer.Dispose();
         _debugRenderer.Dispose();
-        _imGui?.Dispose();
     }
 }
