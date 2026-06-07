@@ -34,8 +34,6 @@ public class Renderer
         
         var view = viewCamera.GetViewMatrix();
         var cameraPosition = viewCamera.Position;
-        
-        bool lightingDirty = scene.Lighting.IsDirty;
 
         foreach (var (shader, entities) in scene.GetEntitiesByShader())
         {
@@ -45,9 +43,7 @@ public class Renderer
             shader.SetUniform("uCameraPos", cameraPosition);
             
             UploadGlobalUniforms(shader, viewCamera);
-
-            if (lightingDirty)
-                UploadLighting(shader, scene.Lighting);
+            UploadLighting(shader, scene.Lighting);
 
             foreach (var entity in entities)
             {
@@ -76,8 +72,6 @@ public class Renderer
                 }
             }
         }
-        
-        scene.Lighting.ClearDirty();
     }
     
     // -----------------------------

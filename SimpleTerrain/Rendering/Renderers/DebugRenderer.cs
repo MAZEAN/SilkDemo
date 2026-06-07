@@ -33,15 +33,17 @@ public class DebugRenderer : IDisposable
 
     private static readonly int[] BoxEdgeIndices =
     [
-        0,1, 1,3, 3,2, 2,0,
-        4,5, 5,7, 7,6, 6,4,
-        0,4, 1,5, 2,6, 3,7
+        0,1, 1,3, 3,2, 2,0,  // back face
+        4,5, 5,7, 7,6, 6,4,  // front face
+        0,4, 1,5, 2,6, 3,7   // connecting edges
     ];
 
     public DebugRenderer(GL gl)
     {
         _gl         = gl;
-        _shader     = new GLShader(gl, "Assets/Shaders/debug.vert", "Assets/Shaders/debug.frag");
+        _shader     = _shader = new GLShader(gl,
+            AssetPath.Resolve("Assets/Shaders/debug.vert"),
+            AssetPath.Resolve("Assets/Shaders/debug.frag"));
         _cameraMesh = BuildCameraMesh(gl);
 
         (_lineVao, _lineVbo) = CreateLineBuffer();
@@ -113,7 +115,7 @@ public class DebugRenderer : IDisposable
             var culled  = !cullingFrustum.IsVisibleAABB(bounds);
         
             _shader.SetUniform("uColor", culled ? ColorAABBCulled : ColorAABB);
-            DrawBoxEdges(GetBoxCorners(bounds.Min, bounds.Max));
+            DrawBoxEdges(bounds.GetBoxCorners());
         }
     }
 
@@ -142,14 +144,15 @@ public class DebugRenderer : IDisposable
         _shader.SetUniform("uColor", ColorDir);
 
         var tipOffset = MathF.Abs(CameraModelBase) * CameraScale;
-        var start     = cam.Position + cam.Forward * tipOffset;
-        var end       = start + cam.Forward * DirLineLength;
+        var start  = cam.Position + cam.Forward * tipOffset;
+        var end    = start + cam.Forward * DirLineLength;
 
-        UploadAndDrawLines(
-        [
+        float[] vertices = [
             start.X, start.Y, start.Z,
-            end.X,   end.Y,   end.Z
-        ], 2);
+            end.X, end.Y, end.Z
+        ];
+
+        UploadAndDrawLines(vertices, 2);
     }
 
     private void DrawFrustum(Camera cam)
@@ -242,14 +245,6 @@ public class DebugRenderer : IDisposable
         uint[] indices = [0,1,2, 0,2,3, 0,3,4, 0,4,1, 1,2,3, 3,4,1];
         return new Mesh(gl, vertices, indices);
     }
-
-    private static Vector3[] GetBoxCorners(Vector3 min, Vector3 max) =>
-    [
-        new(min.X, min.Y, min.Z), new(max.X, min.Y, min.Z),
-        new(min.X, max.Y, min.Z), new(max.X, max.Y, min.Z),
-        new(min.X, min.Y, max.Z), new(max.X, min.Y, max.Z),
-        new(min.X, max.Y, max.Z), new(max.X, max.Y, max.Z),
-    ];
 
     public void Dispose()
     {

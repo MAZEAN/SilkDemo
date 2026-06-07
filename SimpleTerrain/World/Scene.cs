@@ -3,7 +3,6 @@ namespace SimpleTerrain.World;
 using Rendering.Resources;
 using Config;
 using Rendering.Systems;
-using Rendering.Renderers;
 
 public class Scene
 {

@@ -1,4 +1,4 @@
-namespace SimpleTerrain.Rendering.Renderers;
+namespace SimpleTerrain.Config;
 
 public class DebugSettings
 {

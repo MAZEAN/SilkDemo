@@ -5,6 +5,7 @@ using Silk.NET.OpenGL;
 using Utils.Caching;
 using Resources;
 using Config;
+using World;
 
 public class ResourceSystem : IDisposable
 {
@@ -16,20 +17,18 @@ public class ResourceSystem : IDisposable
     {
         Textures = new AssetCache<GLTexture>(
             config.Render.TextureCacheSize,
-            path => new GLTexture(gl, Path.GetFullPath(path))
+            path => new GLTexture(gl, AssetPath.Resolve(path))
         );
 
         Shaders = new AssetCache<GLShader>(
             config.Render.ShaderCacheSize,
-            shaderBase =>
-                new GLShader(
-                    gl,
-                    shaderBase + ".vert",
-                    shaderBase + ".frag"));
+            shaderBase => new GLShader(gl,
+                AssetPath.Resolve(shaderBase + ".vert"),
+                AssetPath.Resolve(shaderBase + ".frag")));
 
         Models = new AssetCache<Model>(
             config.Render.ModelCacheSize,
-            path => new Model(gl, path));
+            path => new Model(gl, AssetPath.Resolve(path)));
     }
 
     public void Dispose()

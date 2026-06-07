@@ -25,11 +25,7 @@ public class Engine
 
     public void Run()
     {
-        var configPath = Path.GetFullPath(
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..",
-                "Config", "config.json"));
-
-        _config = ConfigLoader.Load(configPath);
+        _config = ConfigLoader.Load("Config/config.json");
         _scene  = new Scene(_config);
 
         var options = CreateWindowOptions();

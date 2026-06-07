@@ -30,10 +30,11 @@ public class SceneLoader
 
     public void Load()
     {
-        var json = File.ReadAllText(_path);
+        var fullPath = AssetPath.Resolve(_path);
+        var json = File.ReadAllText(fullPath);
         var def  = JsonSerializer.Deserialize<SceneDefinition>(json, Options)
                    ?? throw new Exception($"Failed to deserialize scene file: {_path}");
-        
+
         LoadEntities(def);
         LoadLighting(def);
         LoadCameras(def);
@@ -138,7 +139,8 @@ public class SceneLoader
 
     private Material LoadMaterialFile(string path)
     {
-        var json = File.ReadAllText(path);
+        var fullPath = AssetPath.Resolve(path);
+        var json = File.ReadAllText(fullPath);
         var def  = JsonSerializer.Deserialize<MaterialDefinition>(json, Options)
                    ?? throw new Exception($"Failed to deserialize material file: {path}");
 

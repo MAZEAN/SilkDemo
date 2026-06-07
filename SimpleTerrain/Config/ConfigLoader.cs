@@ -3,6 +3,8 @@ namespace SimpleTerrain.Config;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+using World;
+
 public static class ConfigLoader
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -18,13 +20,14 @@ public static class ConfigLoader
 
     public static AppConfig Load(string path)
     {
-        var fullPath = Path.GetFullPath(path);
-        // Console.WriteLine($"Config path: {fullPath}");
+        var fullPath = AssetPath.Resolve(path);
 
         if (!File.Exists(fullPath))
         {
             Console.WriteLine("Config not found. Creating default config.");
             var defaultConfig = new AppConfig();
+            
+            // fullPath is already absolute here — AssetPath.Resolve is a no-op on absolute paths
             Save(defaultConfig, fullPath);
             return defaultConfig;
         }
@@ -32,7 +35,6 @@ public static class ConfigLoader
         try
         {
             var json = File.ReadAllText(fullPath);
-
             var config = JsonSerializer.Deserialize<AppConfig>(json, JsonOptions);
 
             if (config == null)
@@ -43,18 +45,15 @@ public static class ConfigLoader
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
-            throw; 
+            throw;
         }
     }
 
     public static void Save(AppConfig config, string path)
     {
-        var fullPath = Path.GetFullPath(path);
-
+        var fullPath = AssetPath.Resolve(path);
         var json = JsonSerializer.Serialize(config, JsonOptions);
-
         File.WriteAllText(fullPath, json);
-
         Console.WriteLine($"✅ Config saved to: {fullPath}");
     }
 }
