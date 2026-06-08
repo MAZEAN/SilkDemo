@@ -8,20 +8,17 @@ using SixLabors.ImageSharp.Processing;
 public class GLTexture : IDisposable
 {
     private readonly GL _gl;
-    private readonly uint _handle;
-
-    public uint Handle => _handle;
-    public string Path { get; }
+    public uint Handle { get; }
 
     public unsafe GLTexture(GL gl, string path)
     {
         _gl = gl;
-        Path = System.IO.Path.GetFullPath(path);
+        var fullPath = Path.GetFullPath(path);
 
-        _handle = _gl.GenTexture();
-        _gl.BindTexture(TextureTarget.Texture2D, _handle);
+        Handle = _gl.GenTexture();
+        _gl.BindTexture(TextureTarget.Texture2D, Handle);
 
-        using var img = Image.Load<Rgba32>(Path);
+        using var img = Image.Load<Rgba32>(fullPath);
 
         img.Mutate(x => x.Flip(FlipMode.Vertical));
         
@@ -49,9 +46,8 @@ public class GLTexture : IDisposable
     public unsafe GLTexture(GL gl, Span<byte> data, uint width, uint height)
     {
         _gl = gl;
-
-        _handle = _gl.GenTexture();
-        _gl.BindTexture(TextureTarget.Texture2D, _handle);
+        Handle = _gl.GenTexture();
+        _gl.BindTexture(TextureTarget.Texture2D, Handle);
 
         fixed (void* d = &data[0])
         {
@@ -82,6 +78,6 @@ public class GLTexture : IDisposable
 
     public void Dispose()
     {
-        _gl.DeleteTexture(_handle);
+        _gl.DeleteTexture(Handle);
     }
 }

@@ -1,11 +1,10 @@
 namespace Centauri.Utils.Caching;
 
-public class LRUCache<TKey, TValue>
+public class LRUCache<TKey, TValue> where TKey : notnull
 {
     private readonly int _capacity;
 
-    private readonly Dictionary<TKey,
-        LinkedListNode<(TKey Key, TValue Value)>> _map;
+    private readonly Dictionary<TKey, LinkedListNode<(TKey Key, TValue Value)>> _map;
 
     private readonly LinkedList<(TKey Key, TValue Value)> _list;
 
