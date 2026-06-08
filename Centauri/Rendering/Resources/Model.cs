@@ -12,11 +12,11 @@ using AssimpMesh = Silk.NET.Assimp.Mesh;
 public class Model : IDisposable
 {
     private readonly GL      _gl;
-    private readonly Assimp? _assimp; // nullable — not needed for code-generated models
+    private readonly Assimp? _assimp;
 
     public string      AssetDirectory { get; private set; } = string.Empty;
     public List<Mesh>  Meshes    { get; private set; } = new();
-    public BoundingBox Bounds    { get; private set; } // private set so it can be assigned after construction
+    public BoundingBox Bounds    { get; private set; }
 
     // constructor for file-loaded models
     public Model(GL gl, string path)
@@ -43,7 +43,6 @@ public class Model : IDisposable
             PostProcessSteps.Triangulate            |
             PostProcessSteps.GenerateNormals        |
             PostProcessSteps.CalculateTangentSpace  |
-            PostProcessSteps.FlipUVs                |
             PostProcessSteps.JoinIdenticalVertices
         ));
 
@@ -62,13 +61,13 @@ public class Model : IDisposable
     private unsafe void ProcessNode(Node* node, Scene* scene)
     {
         for (var i = 0; i < node->MNumMeshes; i++)
-            Meshes.Add(ProcessMesh(scene->MMeshes[node->MMeshes[i]], scene));
+            Meshes.Add(ProcessMesh(scene->MMeshes[node->MMeshes[i]]));
 
         for (var i = 0; i < node->MNumChildren; i++)
             ProcessNode(node->MChildren[i], scene);
     }
 
-    private unsafe Mesh ProcessMesh(AssimpMesh* mesh, Scene* scene)
+    private unsafe Mesh ProcessMesh(AssimpMesh* mesh)
     {
         var vertices = new List<Vertex>(capacity: (int)mesh->MNumVertices);
         var indices  = new List<uint>();
