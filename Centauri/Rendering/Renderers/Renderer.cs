@@ -31,14 +31,13 @@ public class Renderer
     {
         var viewCamera    = scene.GetActiveCamera();
         var cullingCamera = scene.GetPrimaryCamera();
-
-        stats.FrustumRebuilt = cullingCamera.IsFrustumDirty;
+        
         cullingCamera.Frustum.BuildFrustumPlanes();
 
-        var view           = viewCamera.GetViewMatrix();
+        var view          = viewCamera.GetViewMatrix();
         var cameraPosition = viewCamera.Position;
 
-        SetFrameStats(scene, ref stats);
+        ResetFrameStats(scene, ref stats);
 
         foreach (var (shader, entities) in scene.GetEntitiesByShader())
         {
@@ -56,14 +55,14 @@ public class Renderer
                     !cullingCamera.Frustum.IsVisibleAABB(entity.GetWorldBounds()))
                     continue;
 
-                stats.DrawnEntities++;
-
                 var mat = entity.Material;
 
                 stats.TextureBinds += BindMaterialTextures(mat);
+                stats.DrawnEntities++;
+                
                 UploadMaterialFlags(shader, mat);
                 UploadTransform(shader, entity);
-                UploadMaterialProperties(shader, mat);
+                UploadMaterialProperties(shader, mat, entity);
 
                 foreach (var mesh in entity.Model.Meshes)
                 {
@@ -78,21 +77,13 @@ public class Renderer
             }
         }
     }
-
-    private void SetFrameStats(Scene scene, ref FrameStats stats)
-    {
-        stats.TotalEntities = scene.Entities.Count;
-        stats.DrawnEntities = 0;
-        stats.DrawCalls     = 0;
-        stats.TextureBinds  = 0;
-    }
     
     // -----------------------------
     // Material + Texture handling
     // -----------------------------
     private int BindMaterialTextures(Material mat)
     {
-        int binds = 0;
+        var binds = 0;
         binds += BindTexture(mat.Albedo,    TextureUnit.Texture0);
         binds += BindTexture(mat.Normal,    TextureUnit.Texture1);
         binds += BindTexture(mat.Roughness, TextureUnit.Texture2);
@@ -103,8 +94,8 @@ public class Renderer
 
     private int BindTexture(GLTexture? tex, TextureUnit slot)
     {
-        int index  = (int)slot - (int)TextureUnit.Texture0;
-        uint handle = tex?.Handle ?? 0;
+        var index = (int)slot - (int)TextureUnit.Texture0;
+        var handle = tex?.Handle ?? 0;
 
         if (index < 0 || index >= _boundTextures.Length)
             throw new Exception($"Texture slot {slot} exceeds supported range.");
@@ -144,16 +135,15 @@ public class Renderer
         shader.SetUniform("uHasNormal",    mat.Normal    != null ? 1 : 0);
         shader.SetUniform("uHasRoughness", mat.Roughness != null ? 1 : 0);
         shader.SetUniform("uHasMetallic",  mat.Metallic  != null ? 1 : 0);
-        shader.SetUniform("uHasAO",        mat.AO        != null ? 1 : 0);
     }
 
-    private void UploadMaterialProperties(GLShader shader, Material mat)
+    private void UploadMaterialProperties(GLShader shader, Material mat, Entity entity)
     {
         shader.SetUniform("uRoughnessValue", mat.RoughnessValue);
         shader.SetUniform("uMetallicValue",  mat.MetallicValue);
         shader.SetUniform("uColor",          mat.Color);
-        shader.SetUniform("uUvScale",        mat.UvScale);
-        shader.SetUniform("uUvOffset",       mat.UvOffset);
+        shader.SetUniform("uUvScale",        entity.UvScale);
+        shader.SetUniform("uUvOffset",       entity.UvOffset);
     }
     
     // -----------------------------
@@ -258,5 +248,13 @@ public class Renderer
 
         _boundTextures = new uint[maxUnits];
         Array.Fill(_boundTextures, uint.MaxValue);
+    }
+    
+    private void ResetFrameStats(Scene scene, ref FrameStats stats)
+    {
+        stats.TotalEntities = scene.Entities.Count;
+        stats.DrawnEntities = 0;
+        stats.DrawCalls     = 0;
+        stats.TextureBinds  = 0;
     }
 }

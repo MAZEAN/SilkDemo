@@ -44,7 +44,6 @@ uniform int uHasAlbedo;          // 1 if bound, 0 if using scalar fallback
 uniform int uHasNormal;
 uniform int uHasRoughness;
 uniform int uHasMetallic;
-uniform int uHasAO;
 
 uniform float uRoughnessValue;
 uniform float uMetallicValue;
@@ -164,7 +163,7 @@ void main()
     vec4  albedoSample = uHasAlbedo    == 1 ? texture(uAlbedoMap,    fUv) : uColor;
     float roughness    = uHasRoughness == 1 ? texture(uRoughnessMap, fUv).r : uRoughnessValue;
     float metallic     = uHasMetallic  == 1 ? texture(uMetallicMap,  fUv).r : uMetallicValue;
-    float ao           = uHasAO        == 1 ? texture(uAOMap,        fUv).r : 1.0;
+    float ao           = texture(uAOMap,        fUv).r;
 
     vec3 albedo = pow(albedoSample.rgb, vec3(2.2));
     if (albedoSample.a < 0.1) discard;

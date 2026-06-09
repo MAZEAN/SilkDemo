@@ -16,7 +16,7 @@ public class ImGuiSystem : IDisposable
     }
 
     public void Update(float deltaTime) => _controller.Update(deltaTime);
-    public void Render()                => _controller.Render();
+    public void Render() => _controller.Render();
 
     public void Dispose() => _controller.Dispose();
 }

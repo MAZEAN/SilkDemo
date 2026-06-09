@@ -2,6 +2,7 @@ namespace Centauri.World;
 
 using Rendering.Resources;
 using Utils.Geometry;
+using System.Numerics;
 
 public class Entity : IDisposable
 {
@@ -9,9 +10,11 @@ public class Entity : IDisposable
     public Material Material { get; }
     
     private BoundingBox  _worldBounds;
-    private bool         _boundsDirty = true;
-
+    private bool _boundsDirty = true;
     private Transform _transform = new(); 
+    
+    public Vector2 UvScale  { get; set; } = Vector2.One;
+    public Vector2 UvOffset { get; set; } = Vector2.Zero;
 
     public Transform Transform
     {

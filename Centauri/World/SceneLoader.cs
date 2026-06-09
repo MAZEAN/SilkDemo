@@ -54,6 +54,9 @@ public class SceneLoader
 
             entity.Transform.Position = new Vector3(e.Position[0], e.Position[1], e.Position[2]);
             entity.Transform.Scale    = new Vector3(e.Scale[0],    e.Scale[1],    e.Scale[2]);
+            
+            entity.UvScale  = new Vector2(e.UvScale[0],  e.UvScale[1]);
+            entity.UvOffset = new Vector2(e.UvOffset[0], e.UvOffset[1]);
 
             if (e.Rotation is { Length: 3 })
                 entity.Transform.SetEulerAngles(e.Rotation[0], e.Rotation[1], e.Rotation[2]);
@@ -153,12 +156,10 @@ public class SceneLoader
             Normal    = def.Normal    != null ? _resourceSystem.Textures!.Get(def.Normal)    : null,
             Roughness = def.Roughness != null ? _resourceSystem.Textures!.Get(def.Roughness) : null,
             Metallic  = def.Metallic  != null ? _resourceSystem.Textures!.Get(def.Metallic)  : null,
-            AO        = def.AO        != null ? _resourceSystem.Textures!.Get(def.AO)        : null,
+            AO        = def.AO        != null ? _resourceSystem.Textures.Get(def.AO)         : _resourceSystem.DefaultTexture, 
             RoughnessValue = def.RoughnessValue,
             MetallicValue  = def.MetallicValue,
-            Color          = new Vector4(def.Color[0],   def.Color[1],   def.Color[2],   def.Color[3]),
-            UvScale        = new Vector2(def.UvScale[0],  def.UvScale[1]),
-            UvOffset       = new Vector2(def.UvOffset[0], def.UvOffset[1])
+            Color          = new Vector4(def.Color[0],   def.Color[1],   def.Color[2],   def.Color[3])
         };
     }
     

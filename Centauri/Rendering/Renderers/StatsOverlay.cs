@@ -13,7 +13,7 @@ public class StatsOverlay
     public void Render(FrameStats stats)
     {
         const float padding   = 10f;
-        const float windowWidth = 260f;
+        const float windowWidth = 300f;
 
         var viewport = ImGui.GetMainViewport();
         var pos      = new Vector2(
@@ -32,7 +32,8 @@ public class StatsOverlay
             ImGuiWindowFlags.NoSavedSettings |
             ImGuiWindowFlags.NoBringToFrontOnFocus;
 
-        if (!ImGui.Begin("##stats", flags))
+        var state = ImGui.Begin("##stats", flags);
+        if (!state)
         {
             ImGui.End();
             return;
@@ -66,13 +67,7 @@ public class StatsOverlay
         ImGui.Separator();
         ImGui.Text($"Draw Calls     {stats.DrawCalls}");
         ImGui.Text($"Texture Binds  {stats.TextureBinds}");
-
-        var frustumColor = stats.FrustumRebuilt
-            ? new Vector4(1f, 0.5f, 0.2f, 1f)  // orange — rebuilt this frame
-            : new Vector4(0.5f, 0.5f, 0.5f, 1f); // gray — skipped
-
-        ImGui.TextColored(frustumColor,
-            $"Frustum  {(stats.FrustumRebuilt ? "rebuilt" : "cached")}");
+        
         ImGui.End();
     }
 }
