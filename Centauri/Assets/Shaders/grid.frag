@@ -1,14 +1,14 @@
 #version 330 core
 
 // ─────────────────────────────────────────────────────────────────────────────
-const vec3  GRID_COLOR_COARSE = vec3(0.35, 0.35, 0.35);
-const vec3  GRID_COLOR_FINE   = vec3(0.22, 0.22, 0.22);
+const vec3  GRID_COLOR_COARSE = vec3(0.5);
+const vec3  GRID_COLOR_FINE   = vec3(0.3);
 const float GRID_THICKNESS    = 1.0;
-const float GRID_UNIT         = 10.0;
+const float GRID_UNIT         = 20.0;
 
-const vec3  AXIS_COLOR_X      = vec3(0.87, 0.17, 0.17);
-const vec3  AXIS_COLOR_Z      = vec3(0.17, 0.40, 0.87);
-const float AXIS_WIDTH        = 1.0;
+const vec3  AXIS_COLOR_X      = vec3(1.0, 0.0, 0.0);
+const vec3  AXIS_COLOR_Z      = vec3(0.0, 0.0, 1.0);
+const float AXIS_WIDTH        = 2.5;
 
 const float ALPHA_THRESHOLD   = 0.005;
 

@@ -21,7 +21,10 @@ public class CameraController
     
     public void UpdateMovement(IKeyboard keyboard, float deltaTime)
     {
-        float moveSpeed = _config.MoveSpeed * deltaTime;
+        var moveSpeed = _config.MoveSpeed * deltaTime;
+        
+        if (keyboard.IsKeyPressed(Key.ShiftLeft))
+            moveSpeed *= 2.0f;
 
         if (keyboard.IsKeyPressed(Key.W))
             _camera.UpdatePosition(_camera.Forward * moveSpeed);

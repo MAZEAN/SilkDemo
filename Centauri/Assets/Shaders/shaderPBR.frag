@@ -163,7 +163,7 @@ void main()
     vec4  albedoSample = uHasAlbedo    == 1 ? texture(uAlbedoMap,    fUv) : uColor;
     float roughness    = uHasRoughness == 1 ? texture(uRoughnessMap, fUv).r : uRoughnessValue;
     float metallic     = uHasMetallic  == 1 ? texture(uMetallicMap,  fUv).r : uMetallicValue;
-    float ao           = texture(uAOMap,        fUv).r;
+    float ao           = texture(uAOMap, fUv).r;
 
     vec3 albedo = pow(albedoSample.rgb, vec3(2.2));
     if (albedoSample.a < 0.1) discard;
@@ -198,11 +198,14 @@ void main()
     for (int i = 0; i < uSpotLightCount; i++)
         Lo += CalcSpotLight(uSpotLights[i], N, V, albedo, roughness, metallic);
 
-    vec3 ambient = vec3(0.03) * albedo * ao;
+    vec3 F0      = mix(vec3(0.04), albedo, metallic);
+    vec3 ambient = vec3(0.03) * mix(albedo, F0, metallic) * ao;
     vec3 color   = ambient + Lo;
 
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
-
+    
     FragColor = vec4(color, albedoSample.a);
+    
+    //FragColor = vec4(1, 0, 0, 1);
 }

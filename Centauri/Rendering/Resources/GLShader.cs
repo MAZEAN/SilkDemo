@@ -55,6 +55,10 @@ public class GLShader : IDisposable
     {
         if (!HasChanged(name, value)) return;
         int location = GetLocation(name);
+        
+        if (location == -1)
+            return;
+
         _gl.Uniform1(location, value);
     }
 
@@ -62,6 +66,10 @@ public class GLShader : IDisposable
     {
         if (!HasChanged(name, value)) return;
         int location = GetLocation(name);
+        
+        if (location == -1)
+            return;
+
         _gl.Uniform1(location, value);
     }
 
@@ -71,41 +79,65 @@ public class GLShader : IDisposable
         var key = (x, y);
         if (!HasChanged(name, key)) return;
         int location = GetLocation(name);
+        
+        if (location == -1)
+            return;
+
         _gl.Uniform2(location, x, y);
     }
 
     public void SetUniform(string name, Vector2 value)
     {
         if (!HasChanged(name, value)) return;
-        int location = GetLocation(name);
+        var location = GetLocation(name);
+        
+        if (location == -1)
+            return;
+
         _gl.Uniform2(location, value.X, value.Y);
     }
 
     public void SetUniform(string name, Vector3 value)
     {
         if (!HasChanged(name, value)) return;
-        int location = GetLocation(name);
+        var location = GetLocation(name);
+        
+        if (location == -1)
+            return;
+
         _gl.Uniform3(location, value.X, value.Y, value.Z);
     }
 
     public void SetUniform(string name, Vector4 value)
     {
         if (!HasChanged(name, value)) return;
-        int location = GetLocation(name);
+        var location = GetLocation(name);
+        
+        if (location == -1)
+            return;
+
         _gl.Uniform4(location, value.X, value.Y, value.Z, value.W);
     }
 
     public void SetUniform(string name, Matrix4x4 value)
     {
         if (!HasChanged(name, value)) return;
-        int location = GetLocation(name);
+        var location = GetLocation(name);
+        
+        if (location == -1)
+            return;
+        
         unsafe { _gl.UniformMatrix4(location, 1, false, (float*)&value); }
     }
 
     public unsafe void SetUniformMat3x3(string name, Matrix4x4 m)
     {
         if (!HasChanged(name, m)) return;
-        int location = GetLocation(name);
+        var location = GetLocation(name);
+
+        if (location == -1)
+            return;
+        
         float[] mat3 =
         [
             m.M11, m.M12, m.M13,
@@ -121,9 +153,9 @@ public class GLShader : IDisposable
         if (_locationCache.TryGetValue(name, out var cached))
             return cached;
 
-        int location = _gl.GetUniformLocation(_handle, name);
+        var location = _gl.GetUniformLocation(_handle, name);
         if (location == -1)
-            throw new Exception($"Uniform '{name}' not found in shader.");
+            return -1;
 
         _locationCache[name] = location;
         return location;
@@ -137,13 +169,13 @@ public class GLShader : IDisposable
     private uint LoadShader(ShaderType type, string path)
     {
         // Console.WriteLine($"Loading shader: {Path.GetFullPath(path)}");
-        string src = File.ReadAllText(path);
-        uint handle = _gl.CreateShader(type);
+        var src = File.ReadAllText(path);
+        var handle = _gl.CreateShader(type);
         
         _gl.ShaderSource(handle, src);
         _gl.CompileShader(handle);
         
-        string infoLog = _gl.GetShaderInfoLog(handle);
+        var infoLog = _gl.GetShaderInfoLog(handle);
         
         if (!string.IsNullOrWhiteSpace(infoLog))
         {

@@ -1,6 +1,6 @@
 {
   "Window": {
-    "Title": "Centauri",
+    "Title": "Centauri-Engine",
     "WindowState": "Maximized",
     "EnableVSync": true,
     "Samples": 4,
@@ -16,7 +16,7 @@
     "ZoomSensitivity": 1.5,
     "MinZoom": 1.0,
     "MaxZoom": 45.0,
-    "MoveSpeed": 2.5
+    "MoveSpeed": 4.0
   },
   "Render": {
     "TextureCacheSize": 128,

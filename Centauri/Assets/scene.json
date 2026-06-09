@@ -71,6 +71,16 @@
       "uvOffset": [0.0, 0.0]
     },
     {
+      "name":     "Sphere4",
+      "model":    "Assets/Objects/sphere.glb",
+      "material": "Assets/Materials/CorrugatedIron.mat",
+      "position": [3, 0, 0],
+      "scale":    [1, 1, 1],
+      "rotation": [0, 0, 0],
+      "uvScale":  [1.0, 1.0],
+      "uvOffset": [0.0, 0.0]
+    },
+    {
       "name":     "Torus",
       "model":    "Assets/Objects/torus.glb",
       "material": "Assets/Materials/WoodFloorDeck.mat",
