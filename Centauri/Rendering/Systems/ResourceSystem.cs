@@ -18,18 +18,18 @@ public class ResourceSystem : IDisposable
     {
         Textures = new AssetCache<GLTexture>(
             config.Render.TextureCacheSize,
-            path => new GLTexture(gl, AssetPath.Resolve(path))
+            path => new GLTexture(gl, PathResolver.Resolve(path))
         );
 
         Shaders = new AssetCache<GLShader>(
             config.Render.ShaderCacheSize,
             shaderBase => new GLShader(gl,
-                AssetPath.Resolve(shaderBase + ".vert"),
-                AssetPath.Resolve(shaderBase + ".frag")));
+                PathResolver.Resolve(shaderBase + ".vert"),
+                PathResolver.Resolve(shaderBase + ".frag")));
 
         Models = new AssetCache<Model>(
             config.Render.ModelCacheSize,
-            path => new Model(gl, AssetPath.Resolve(path)));
+            path => new Model(gl, PathResolver.Resolve(path)));
 
         DefaultTexture = CreateDefaultTexture(gl);
     }

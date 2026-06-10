@@ -20,7 +20,7 @@ public static class ConfigLoader
 
     public static AppConfig Load(string path)
     {
-        var fullPath = AssetPath.Resolve(path);
+        var fullPath = PathResolver.Resolve(path);
 
         if (!File.Exists(fullPath))
         {
@@ -51,7 +51,7 @@ public static class ConfigLoader
 
     public static void Save(AppConfig config, string path)
     {
-        var fullPath = AssetPath.Resolve(path);
+        var fullPath = PathResolver.Resolve(path);
         var json = JsonSerializer.Serialize(config, JsonOptions);
         File.WriteAllText(fullPath, json);
         Console.WriteLine($"✅ Config saved to: {fullPath}");

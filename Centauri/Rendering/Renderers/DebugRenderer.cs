@@ -43,8 +43,8 @@ public class DebugRenderer : IDisposable
     {
         _gl         = gl;
         _shader = new GLShader(gl,
-            AssetPath.Resolve("Assets/Shaders/debug.vert"),
-            AssetPath.Resolve("Assets/Shaders/debug.frag"));
+            PathResolver.Resolve("Assets/Shaders/debug.vert"),
+            PathResolver.Resolve("Assets/Shaders/debug.frag"));
         _cameraMesh = BuildCameraMesh(gl);
 
         (_lineVao, _lineVbo) = CreateLineBuffer();
