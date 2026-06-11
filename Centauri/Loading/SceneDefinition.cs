@@ -69,5 +69,6 @@ public class CameraDefinition
     [JsonPropertyName("up")]       public string  Up       { get; set; } = "Y";
     [JsonPropertyName("yaw")]      public float   Yaw      { get; set; }
     [JsonPropertyName("pitch")]    public float   Pitch    { get; set; }
-    [JsonPropertyName("active")]   public bool    Active   { get; set; }
+    [JsonPropertyName("active")]   public bool Active { get; set; }
+    [JsonPropertyName("primary")]  public bool Primary { get; set; }
 }

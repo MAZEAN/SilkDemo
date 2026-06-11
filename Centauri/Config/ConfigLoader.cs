@@ -1,23 +1,10 @@
 namespace Centauri.Config;
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
-
 using Utils.Misc;
 
 public static class ConfigLoader
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        WriteIndented = true,
-        IncludeFields = true,
-        Converters =
-        {
-            new JsonStringEnumConverter()
-        }
-    };
-
     public static AppConfig Load(string path)
     {
         var fullPath = PathResolver.Resolve(path);
@@ -26,16 +13,14 @@ public static class ConfigLoader
         {
             Console.WriteLine("Config not found. Creating default config.");
             var defaultConfig = new AppConfig();
-            
-            // fullPath is already absolute here — AssetPath.Resolve is a no-op on absolute paths
-            Save(defaultConfig, fullPath);
+            Save(defaultConfig, fullPath); // fullPath already absolute — Resolve is a no-op
             return defaultConfig;
         }
 
         try
         {
-            var json = File.ReadAllText(fullPath);
-            var config = JsonSerializer.Deserialize<AppConfig>(json, JsonOptions);
+            var json   = File.ReadAllText(fullPath);
+            var config = JsonSerializer.Deserialize<AppConfig>(json, JsonDefaults.Options);
 
             if (config == null)
                 throw new Exception("Deserialized config is null");
@@ -52,7 +37,7 @@ public static class ConfigLoader
     public static void Save(AppConfig config, string path)
     {
         var fullPath = PathResolver.Resolve(path);
-        var json = JsonSerializer.Serialize(config, JsonOptions);
+        var json     = JsonSerializer.Serialize(config, JsonDefaults.Options);
         File.WriteAllText(fullPath, json);
         Console.WriteLine($"✅ Config saved to: {fullPath}");
     }

@@ -16,11 +16,6 @@ public class SceneLoader
     private readonly AppConfig _config;
     
     private readonly string _path;
-    
-    private static readonly JsonSerializerOptions Options = new()
-    {
-        PropertyNameCaseInsensitive = true
-    };
 
     public SceneLoader(ResourceSystem resourceManager, Scene scene, AppConfig config)
     {
@@ -34,7 +29,7 @@ public class SceneLoader
     {
         var fullPath = PathResolver.Resolve(_path);
         var json = File.ReadAllText(fullPath);
-        var def  = JsonSerializer.Deserialize<SceneDefinition>(json, Options)
+        var def  = JsonSerializer.Deserialize<SceneDefinition>(json, JsonDefaults.Options)
                    ?? throw new Exception($"Failed to deserialize scene file: {_path}");
 
         LoadEntities(def);
@@ -103,6 +98,9 @@ public class SceneLoader
 
     private void LoadCameras(SceneDefinition def)
     {
+        if (def.Cameras.Count == 0)
+            throw new Exception("Scene must contain at least one camera.");
+
         foreach (var c in def.Cameras)
         {
             var camera = new Camera(
@@ -116,30 +114,21 @@ public class SceneLoader
 
             _scene.AddCamera(camera);
         }
-        
-        if (def.Cameras.Count == 0)
-        {
-            throw new Exception("Scene must contain at least one camera.");
-        }
-        
-        var primaryName = _config.Camera.PrimaryCamera;
-        var primary = def.Cameras.FirstOrDefault(c => c.Name == primaryName);
-        
-        if (primary != null)
-        {
-            _scene.SetActiveCamera(primaryName);
-        }
-        else
-        {
-            _scene.SetActiveCamera(def.Cameras[0].Name);
-        }
+
+        // active (view) camera — honor the scene's `active` flag, fall back to the first
+        var active = def.Cameras.FirstOrDefault(c => c.Active) ?? def.Cameras[0];
+        _scene.SetActiveCamera(active.Name);
+
+        // primary (culling) camera — honor `primary`, fall back to the active camera
+        var primary = def.Cameras.FirstOrDefault(c => c.Primary) ?? active;
+        _scene.SetPrimaryCamera(primary.Name);
     }
 
     private Material LoadMaterialFile(string path)
     {
         var fullPath = PathResolver.Resolve(path);
         var json = File.ReadAllText(fullPath);
-        var def  = JsonSerializer.Deserialize<MaterialDefinition>(json, Options)
+        var def  = JsonSerializer.Deserialize<MaterialDefinition>(json, JsonDefaults.Options)
                    ?? throw new Exception($"Failed to deserialize material file: {path}");
 
         var shader = _resourceSystem.Shaders.Get(def.Shader);

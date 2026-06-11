@@ -25,7 +25,7 @@ public class Engine : IWindowCallbacks
     public void Run()
     {
         _config = ConfigLoader.Load("Config/config.json");
-        _scene  = new Scene(_config);
+        _scene  = new Scene();
 
         using var window = WindowManager.CreateWindow(_config, this);
 

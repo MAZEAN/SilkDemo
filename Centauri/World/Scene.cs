@@ -9,7 +9,6 @@ using Rendering.Systems;
 
 public class Scene
 {
-    private readonly AppConfig _config;
     private readonly List<Entity> _entities = new();
     public IReadOnlyList<Entity> Entities => _entities;
     public LightingSystem Lighting { get; } = new();
@@ -24,11 +23,7 @@ public class Scene
 
     private readonly Dictionary<string, Camera> _cameraLookup = new();
     private Camera? _activeCamera;
-
-    public Scene(AppConfig config)
-    {
-        _config = config;
-    }
+    private Camera? _primaryCamera;
 
     public IReadOnlyDictionary<GLShader, List<Entity>> GetEntitiesByShader()
     {
@@ -103,8 +98,15 @@ public class Scene
     }
     
     public Camera GetPrimaryCamera()
+        => _primaryCamera ?? _activeCamera
+            ?? throw new Exception("No primary camera set.");
+
+    public void SetPrimaryCamera(string name)
     {
-        return Cameras.First(c => c.Name == _config.Camera.PrimaryCamera);
+        if (!_cameraLookup.TryGetValue(name, out var cam))
+            throw new Exception($"Primary camera '{name}' not found");
+
+        _primaryCamera = cam;
     }
 
     public void SetActiveCamera(string name)

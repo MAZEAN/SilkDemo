@@ -14,7 +14,7 @@ public class DebugSettings
     {
         ShowDebugView = !ShowDebugView;
         
-        // Show all when toggling to debug view
+        // Enable all when toggling to debug view
         if (ShowDebugView)
         {
             ShowBoundingBoxes = true;

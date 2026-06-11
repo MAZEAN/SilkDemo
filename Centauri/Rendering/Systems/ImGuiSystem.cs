@@ -8,6 +8,7 @@ using ImGuiNET;
 using System.Numerics;
 
 using Utils.Misc;
+using Config;
 
 public class ImGuiSystem : IDisposable
 {
@@ -15,7 +16,7 @@ public class ImGuiSystem : IDisposable
     private readonly ImGuiController _controller;
     public ImFontPtr Font { get; private set; }
 
-    public ImGuiSystem(GL gl, IWindow window, IInputContext input)
+    public ImGuiSystem(GL gl, ImGuiConfig config, IWindow window, IInputContext input)
     {
         _window = window;
         
@@ -28,8 +29,7 @@ public class ImGuiSystem : IDisposable
             io.Fonts.AddFontDefault();
             
             font = io.Fonts.AddFontFromFileTTF(
-                PathResolver.Resolve("Assets/Fonts/IosevkaCharon-Regular.ttf"),
-                18.0f);
+                PathResolver.Resolve(config.Font), config.FontSize);
         });
 
         Font = font;

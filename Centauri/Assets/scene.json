@@ -3,13 +3,7 @@
     {
       "name":     "Cube",
       "model":    "Assets/Objects/cube.glb",
-      "material": "Assets/Materials/BrickWall.mat",
-      "position": [0, 0, 0],
-      "scale":    [1, 1, 1],
-      "rotation": [0, 0, 0],
-      "uvScale":  [1.0, 1.0],
-      "uvOffset": [0.0, 0.0],
-      "enabled":  true
+      "material": "Assets/Materials/BrickWall.mat"
     },
     {
       "name":     "Rectangle",
@@ -18,20 +12,13 @@
       "position": [-3, 1, 0],
       "scale":    [1, 0.2, 1],
       "rotation": [0, 0, -45],
-      "uvScale":  [1.0, 0.4],
-      "uvOffset": [0.0, 0.0],
-      "enabled":  true
+      "uvScale":  [1.0, 0.4]
     },
     {
       "name":     "Dragon",
       "model":    "Assets/Objects/reduced_dragon.glb",
       "material": "Assets/Materials/Default.mat",
-      "position": [0, 1, -8],
-      "scale":    [1, 1, 1],
-      "rotation": [0, 0, 0],
-      "uvScale":  [1.0, 1.0],
-      "uvOffset": [0.0, 0.0],
-      "enabled":  true
+      "position": [0, 1, -8]
     },
     {
       "name":     "Floor",
@@ -39,32 +26,19 @@
       "material": "Assets/Materials/ChessTiles.mat",
       "position": [0, -2, 0],
       "scale":    [100, 1, 100],
-      "rotation": [0, 0, 0],
-      "uvScale":  [10.0, 10.0],
-      "uvOffset": [0.0, 0.0],
-      "enabled":  true
+      "uvScale":  [10.0, 10.0]
     },
     {
       "name":     "Sphere1",
       "model":    "Assets/Objects/sphere.glb",
       "material": "Assets/Materials/RustyMetal.mat",
-      "position": [0, 2, -4],
-      "scale":    [1, 1, 1],
-      "rotation": [0, 0, 0],
-      "uvScale":  [1.0, 1.0],
-      "uvOffset": [0.0, 0.0],
-      "enabled":  true
+      "position": [0, 2, -4]
     },
     {
       "name":     "Sphere2",
       "model":    "Assets/Objects/sphere.glb",
       "material": "Assets/Materials/BlueMetalPlate.mat",
-      "position": [-3, 1, -3],
-      "scale":    [1, 1, 1],
-      "rotation": [0, 0, 0],
-      "uvScale":  [1.0, 1.0],
-      "uvOffset": [0.0, 0.0],
-      "enabled":  true
+      "position": [-3, 1, -3]
     },
     {
       "name":     "Sphere3",
@@ -72,43 +46,27 @@
       "material": "Assets/Materials/ShinyMetal.mat",
       "position": [-2, 0, -2],
       "scale":    [0.5, 0.5, 0.5],
-      "rotation": [0, 0, 0],
-      "uvScale":  [0.5, 0.5],
-      "uvOffset": [0.0, 0.0],
-      "enabled":  true
+      "uvScale":  [0.5, 0.5]
     },
     {
       "name":     "Sphere4",
       "model":    "Assets/Objects/sphere.glb",
       "material": "Assets/Materials/CorrugatedIron.mat",
-      "position": [3, 0, 0],
-      "scale":    [1, 1, 1],
-      "rotation": [0, 0, 0],
-      "uvScale":  [1.0, 1.0],
-      "uvOffset": [0.0, 0.0],
-      "enabled":  true
+      "position": [3, 0, 0]
     },
     {
       "name":     "Torus",
       "model":    "Assets/Objects/torus.glb",
       "material": "Assets/Materials/WoodFloorDeck.mat",
       "position": [2, 0, -3],
-      "scale":    [1, 1, 1],
-      "rotation": [45, 0, 45],
-      "uvScale":  [1.0, 1.0],
-      "uvOffset": [0.0, 0.0],
-      "enabled":  true
+      "rotation": [45, 0, 45]
     },
     {
       "name":     "Cone",
       "model":    "Assets/Objects/cone.glb",
       "material": "Assets/Materials/Gold.mat",
       "position": [3, 3, -3],
-      "scale":    [1, 1, 1],
-      "rotation": [0, -90, 15],
-      "uvScale":  [1.0, 1.0],
-      "uvOffset": [0.0, 0.0],
-      "enabled":  true
+      "rotation": [0, -90, 15]
     },    
     {
       "name":     "Sun",
@@ -123,7 +81,10 @@
     },
     {
       "name":     "Lamp",
+      "model":    "Assets/Objects/sphere.glb",
+      "material": "Assets/Materials/Default.mat",
       "position": [0, 2, 0],
+      "scale":    [0.01, 0.01, 0.01],
       "light": {
         "type":      "point",
         "color":     [1.0, 0.8, 0.6],
@@ -142,7 +103,8 @@
       "up": "Y",
       "yaw": -90,
       "pitch": 0,
-      "active": true
+      "active": true,
+      "primary": true
     },
     {
       "name": "Debug",
@@ -150,7 +112,8 @@
       "up": "Y",
       "yaw": -180,
       "pitch": 0,
-      "active": false
+      "active": false,
+      "primary": false
     }
   ]
 }

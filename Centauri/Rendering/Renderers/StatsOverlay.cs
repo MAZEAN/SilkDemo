@@ -11,12 +11,11 @@ public class StatsOverlay
     private readonly ImFontPtr _font;
     public bool IsVisible { get; private set; }
     public void Toggle() => IsVisible = !IsVisible;
-    
-    private const ImGuiWindowFlags Flags = ImGuiWindowFlags.NoDecoration          |
-                                           ImGuiWindowFlags.NoMove                |
-                                           ImGuiWindowFlags.NoSavedSettings       |
-                                           ImGuiWindowFlags.NoBringToFrontOnFocus |
-                                           ImGuiWindowFlags.AlwaysAutoResize;
+
+    private const ImGuiWindowFlags Flags = ImGuiWindowFlags.NoDecoration           |
+                                           ImGuiWindowFlags.NoMove                 |
+                                           ImGuiWindowFlags.NoSavedSettings        |
+                                           ImGuiWindowFlags.NoBringToFrontOnFocus;
     
     // Colors
     private readonly Vector4 _defaultColor = new (1.0f, 1.0f, 1.0f, 1.0f);
@@ -25,6 +24,11 @@ public class StatsOverlay
     private readonly Vector4 _greenColor  = new (0.4f, 0.9f, 0.4f, 1.0f);
     private readonly Vector4 _blueColor   = new (0.4f, 0.7f, 1.0f, 1.0f);
     private readonly Vector4 _redColor    = new (1.0f, 0.4f, 0.4f, 1.0f);
+    
+    // Window params
+    private const int Width = 350;
+    private const float Padding = 10f;
+    private const float BgAlpha = 0.85f;
 
     public StatsOverlay(ImFontPtr font)
     {
@@ -93,20 +97,21 @@ public class StatsOverlay
     // Helpers
     // ─────────────────────────────────────────────
 
-    private void SetupWindow()
+    private static void SetupWindow()
     {
-        const float padding = 10f;
-
         var viewport = ImGui.GetMainViewport();
         var anchor = new Vector2(
-            viewport.WorkPos.X + viewport.WorkSize.X - padding,
-            viewport.WorkPos.Y + padding);
+            viewport.WorkPos.X + viewport.WorkSize.X - Padding,
+            viewport.WorkPos.Y + Padding);
 
-        ImGui.SetNextWindowPos(anchor, ImGuiCond.Always, new Vector2(1f, 0f)); // pivot = top-right
-        ImGui.SetNextWindowBgAlpha(0.85f);
+        ImGui.SetNextWindowPos(anchor, ImGuiCond.Always, new Vector2(1f, 0f));
+        ImGui.SetNextWindowSizeConstraints(
+            new Vector2(Width, 0),
+            new Vector2(Width, float.MaxValue));
+        ImGui.SetNextWindowBgAlpha(BgAlpha);
     }
 
-    private void DrawSection(string title, Vector4 color, Action content)
+    private static void DrawSection(string title, Vector4 color, Action content)
     {
         ImGui.TextColored(color, title);
         ImGui.Separator();
@@ -124,7 +129,7 @@ public class StatsOverlay
         ImGui.Spacing();
     }
 
-    private void Row(string label, string value)
+    private static void Row(string label, string value)
     {
         ImGui.TableNextRow();
         ImGui.TableSetColumnIndex(0);
@@ -134,7 +139,7 @@ public class StatsOverlay
         ImGui.TextUnformatted(value);
     }
 
-    private void RowColored(string label, string value, Vector4 color)
+    private static void RowColored(string label, string value, Vector4 color)
     {
         ImGui.TableNextRow();
         ImGui.TableSetColumnIndex(0);
@@ -146,8 +151,8 @@ public class StatsOverlay
         ImGui.PopStyleColor();
     }
 
-    private string FormatVec3(Vector3 v)
+    private static string FormatVec3(Vector3 v)
     {
-        return $"({v.X:F2}, {v.Y:F2}, {v.Z:F2})";
+        return $"({v.X,8:+0.00;-0.00}, {v.Y,8:+0.00;-0.00}, {v.Z,8:+0.00;-0.00})";
     }
 }

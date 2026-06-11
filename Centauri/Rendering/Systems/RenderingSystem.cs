@@ -36,7 +36,7 @@ public class RenderingSystem : IDisposable
     // called after GL and input are both ready
     public void InitializeImGui(IWindow window, IInputContext input)
     {
-        _imGui = new ImGuiSystem(_gl, window, input);
+        _imGui = new ImGuiSystem(_gl, _config.ImGui, window, input);
         _statsOverlay  = new StatsOverlay(_imGui.Font);
     }
 

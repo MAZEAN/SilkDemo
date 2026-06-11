@@ -161,9 +161,9 @@ public class MainRenderer
         shader.SetUniform("uModel", model);
 
         if (Matrix4x4.Invert(model, out var invModel))
-            shader.SetUniformMat3x3("uNormalMatrix", Matrix4x4.Transpose(invModel));
+            shader.SetUniformMat3X3("uNormalMatrix", Matrix4x4.Transpose(invModel));
         else
-            shader.SetUniformMat3x3("uNormalMatrix", Matrix4x4.Transpose(model));
+            shader.SetUniformMat3X3("uNormalMatrix", Matrix4x4.Transpose(model));
     }
     
     // -----------------------------
