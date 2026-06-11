@@ -10,7 +10,6 @@ public class StatsOverlay
 {
     private readonly ImFontPtr _font;
     public bool IsVisible { get; private set; }
-
     public void Toggle() => IsVisible = !IsVisible;
     
     private const ImGuiWindowFlags Flags = ImGuiWindowFlags.NoDecoration          |

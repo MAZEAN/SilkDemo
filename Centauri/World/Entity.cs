@@ -6,39 +6,44 @@ using System.Numerics;
 
 public class Entity : IDisposable
 {
-    public Model    Model    { get; }
-    public Material Material { get; }
-    
-    private BoundingBox  _worldBounds;
+    public Model?    Model    { get; }   // optional now — a pure light has no mesh
+    public Material? Material { get; }
+    public Light?    Light    { get; set; }
+
+    private BoundingBox _worldBounds;
     private bool _boundsDirty = true;
-    private Transform _transform = new(); 
-    
+    private Transform _transform = new();
+
     public Vector2 UvScale  { get; set; } = Vector2.One;
     public Vector2 UvOffset { get; set; } = Vector2.Zero;
-    
-    public bool    Enabled   { get; set; } = true;
+
+    public bool Enabled { get; set; } = true;
 
     public Transform Transform
     {
         get => _transform;
         set
         {
-            _transform.OnChanged -= OnTransformChanged; 
+            _transform.OnChanged -= OnTransformChanged;
             _transform            = value;
             _transform.OnChanged += OnTransformChanged;
             _boundsDirty          = true;
         }
     }
 
-    public Entity(Model model, Material material)
+    public Entity(Model? model = null, Material? material = null, Light? light = null)
     {
         Model    = model;
         Material = material;
+        Light    = light;
         _transform.OnChanged += OnTransformChanged;
     }
 
     public BoundingBox GetWorldBounds()
     {
+        if (Model is null)
+            return default;
+
         if (_boundsDirty)
         {
             _worldBounds = Model.Bounds.Transform(Transform.WorldMatrix);
@@ -52,6 +57,5 @@ public class Entity : IDisposable
     public void Dispose()
     {
         _transform.OnChanged -= OnTransformChanged;
-        Material.Dispose();
     }
 }

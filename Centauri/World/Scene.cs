@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Silk.NET.Windowing;
 
 namespace Centauri.World;
@@ -38,7 +39,10 @@ public class Scene
 
         foreach (var entity in _entities)
         {
-            var shader = entity.Material.Shader;
+            if (entity.Material is not { } material)   // light-only / mesh-less entities
+                continue;
+
+            var shader = material.Shader;
 
             if (!_shaderGroups.TryGetValue(shader, out var list))
             {
@@ -53,7 +57,11 @@ public class Scene
         foreach (var list in _shaderGroups.Values)
         {
             list.Sort((a, b) =>
-                a.Material.SortKey.CompareTo(b.Material.SortKey));
+            {
+                Debug.Assert(a.Material != null);
+                Debug.Assert(b.Material != null);
+                return a.Material.SortKey.CompareTo(b.Material.SortKey);
+            });
         }
 
         _shaderGroupsDirty = false;

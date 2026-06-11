@@ -38,7 +38,6 @@ public class SceneLoader
                    ?? throw new Exception($"Failed to deserialize scene file: {_path}");
 
         LoadEntities(def);
-        LoadLighting(def);
         LoadCameras(def);
     }
 
@@ -46,12 +45,19 @@ public class SceneLoader
     {
         foreach (var e in def.Entities)
         {
-            var model = _resourceSystem.Models.Get(e.Model);
-            var material = e.Material != null
-                ? LoadMaterialFile(e.Material)
-                : throw new Exception($"Entity '{e.Name}' must have a material file.");
+            var model = !string.IsNullOrEmpty(e.Model)
+                ? _resourceSystem.Models.Get(e.Model)
+                : null;
 
-            var entity = new Entity(model, material);
+            var material = !string.IsNullOrEmpty(e.Material)
+                ? LoadMaterialFile(e.Material)
+                : null;
+            
+            Light? light = null;
+            if (e.Light is { } l)
+                light = CreateLight(l);
+
+            var entity = new Entity(model, material, light);
 
             entity.Transform.Position = new Vector3(e.Position[0], e.Position[1], e.Position[2]);
             entity.Transform.Scale    = new Vector3(e.Scale[0],    e.Scale[1],    e.Scale[2]);
@@ -67,47 +73,32 @@ public class SceneLoader
             _scene.AddEntity(entity);
         }
     }
-
-    private void LoadLighting(SceneDefinition def)
+    
+    private Light CreateLight(LightDefinition l)
     {
-        foreach (var d in def.Lights.Directional)
-        {
-            _scene.Lighting.Add(new DirectionalLight
-            {
-                Direction = new Vector3(d.Direction[0], d.Direction[1], d.Direction[2]),
-                Color     = new Vector3(d.Color[0],     d.Color[1],     d.Color[2]),
-                Intensity = d.Intensity,
-                Enabled   = d.Enabled
-            });
-        }
+        var color     = new Vector3(l.Color[0], l.Color[1], l.Color[2]);
+        var direction = new Vector3(l.Direction[0], l.Direction[1], l.Direction[2]);
 
-        foreach (var p in def.Lights.Point)
+        return l.Type.ToLowerInvariant() switch
         {
-            _scene.Lighting.Add(new PointLight
+            "directional" => new DirectionalLight
             {
-                Position  = new Vector3(p.Position[0], p.Position[1], p.Position[2]),
-                Color     = new Vector3(p.Color[0],    p.Color[1],    p.Color[2]),
-                Intensity = p.Intensity,
-                Constant  = p.Constant,
-                Linear    = p.Linear,
-                Quadratic = p.Quadratic,
-                Enabled   = p.Enabled
-            });
-        }
-
-        foreach (var s in def.Lights.Spot)
-        {
-            _scene.Lighting.Add(new SpotLight
+                Color = color, Intensity = l.Intensity, Enabled = l.Enabled,
+                Direction = direction
+            },
+            "spot" => new SpotLight
             {
-                Position    = new Vector3(s.Position[0],  s.Position[1],  s.Position[2]),
-                Direction   = new Vector3(s.Direction[0], s.Direction[1], s.Direction[2]),
-                Color       = new Vector3(s.Color[0],     s.Color[1],     s.Color[2]),
-                Intensity   = s.Intensity,
-                InnerCutoff = s.InnerCutoff,
-                OuterCutoff = s.OuterCutoff,
-                Enabled     = s.Enabled
-            });
-        }
+                Color = color, Intensity = l.Intensity, Enabled = l.Enabled,
+                Direction = direction,
+                InnerCutoff = l.InnerCutoff, OuterCutoff = l.OuterCutoff
+            },
+            "point" => new PointLight
+            {
+                Color = color, Intensity = l.Intensity, Enabled = l.Enabled,
+                Constant = l.Constant, Linear = l.Linear, Quadratic = l.Quadratic
+            },
+            _ => throw new Exception($"Unknown light type '{l.Type}'.")
+        };
     }
 
     private void LoadCameras(SceneDefinition def)

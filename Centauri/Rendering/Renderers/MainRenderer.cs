@@ -14,8 +14,8 @@ public class MainRenderer
     private readonly GL _gl;
     private readonly AppConfig _config;
     
-    private readonly List<PointLight> _activePointLights = new();
-    private readonly List<SpotLight>  _activeSpotLights  = new();
+    private const int MaxPointLights = 16;
+    private const int MaxSpotLights  = 16;
 
     private uint[] _boundTextures = null!;
 
@@ -39,6 +39,8 @@ public class MainRenderer
 
         ResetFrameStats(scene, ref stats);
 
+        scene.Lighting.Collect(scene.Entities);
+
         foreach (var (shader, entities) in scene.GetEntitiesByShader())
         {
             shader.Use();
@@ -53,12 +55,13 @@ public class MainRenderer
             {
                 if (!entity.Enabled) continue;
                 
+                if (entity.Model is not { } model || entity.Material is not { } mat)
+                    continue;
+                
                 if (scene.DebugSettings.EnableCulling &&
                     !cullingCamera.Frustum.IsVisibleAABB(entity.GetWorldBounds()))
                     continue;
-
-                var mat = entity.Material;
-
+                
                 stats.TextureBinds += BindMaterialTextures(mat);
                 stats.DrawnEntities++;
                 
@@ -175,18 +178,10 @@ public class MainRenderer
 
     private void UploadDirectionalLight(GLShader shader, LightingSystem lights)
     {
-        DirectionalLight? dir = null;
-
-        foreach (var l in lights.DirectionalLights)
-        {
-            if (!l.Enabled) continue;
-            dir = l;
-            break;
-        }
-
-        if (dir == null)
+        if (lights.DirectionalLights.Count == 0)
             return;
 
+        var dir = lights.DirectionalLights[0];
         shader.SetUniform("uDirLight.direction", dir.Direction);
         shader.SetUniform("uDirLight.color",     dir.Color);
         shader.SetUniform("uDirLight.intensity", dir.Intensity);
@@ -194,22 +189,15 @@ public class MainRenderer
 
     private void UploadPointLights(GLShader shader, LightingSystem lights)
     {
-        _activePointLights.Clear();
-
-        foreach (var l in lights.PointLights)
-        {
-            if (l.Enabled)
-                _activePointLights.Add(l);
-        }
-
-        int count = _activePointLights.Count;
+        var count = Math.Min(lights.PointLights.Count, MaxPointLights);
         shader.SetUniform("uPointLightCount", count);
-        
-        for (int i = 0; i < count; i++)
-        {
-            var light = _activePointLights[i];
 
-            shader.SetUniform($"uPointLights[{i}].position",  light.Position);
+        for (var i = 0; i < count; i++)
+        {
+            var active = lights.PointLights[i];
+            var light  = active.Light;
+
+            shader.SetUniform($"uPointLights[{i}].position",  active.Position);
             shader.SetUniform($"uPointLights[{i}].color",     light.Color);
             shader.SetUniform($"uPointLights[{i}].intensity", light.Intensity);
             shader.SetUniform($"uPointLights[{i}].constant",  light.Constant);
@@ -220,25 +208,18 @@ public class MainRenderer
 
     private void UploadSpotLights(GLShader shader, LightingSystem lights)
     {
-        _activeSpotLights.Clear();
-
-        foreach (var l in lights.SpotLights)
-        {
-            if (l.Enabled)
-                _activeSpotLights.Add(l);
-        }
-
-        int count = _activeSpotLights.Count;
+        var count = Math.Min(lights.SpotLights.Count, MaxSpotLights);
         shader.SetUniform("uSpotLightCount", count);
 
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
-            var light = _activeSpotLights[i];
+            var active = lights.SpotLights[i];
+            var light  = active.Light;
 
-            shader.SetUniform($"uSpotLights[{i}].position",  light.Position);
-            shader.SetUniform($"uSpotLights[{i}].direction", light.Direction);
-            shader.SetUniform($"uSpotLights[{i}].color",     light.Color);
-            shader.SetUniform($"uSpotLights[{i}].intensity", light.Intensity);
+            shader.SetUniform($"uSpotLights[{i}].position",    active.Position);
+            shader.SetUniform($"uSpotLights[{i}].direction",   light.Direction);
+            shader.SetUniform($"uSpotLights[{i}].color",       light.Color);
+            shader.SetUniform($"uSpotLights[{i}].intensity",   light.Intensity);
             shader.SetUniform($"uSpotLights[{i}].innerCutoff", MathF.Cos(light.InnerCutoff * MathF.PI / 180f));
             shader.SetUniform($"uSpotLights[{i}].outerCutoff", MathF.Cos(light.OuterCutoff * MathF.PI / 180f));
         }

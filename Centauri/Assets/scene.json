@@ -109,6 +109,30 @@
       "uvScale":  [1.0, 1.0],
       "uvOffset": [0.0, 0.0],
       "enabled":  true
+    },    
+    {
+      "name":     "Sun",
+      "position": [0, 0, 0],
+      "light": {
+        "type":      "directional",
+        "direction": [-0.2, -1.0, -0.3],
+        "color":     [1.0, 1.0, 1.0],
+        "intensity": 2.0,
+        "enabled":   true
+      }
+    },
+    {
+      "name":     "Lamp",
+      "position": [0, 2, 0],
+      "light": {
+        "type":      "point",
+        "color":     [1.0, 0.8, 0.6],
+        "intensity": 3.0,
+        "constant":  1.0,
+        "linear":    0.09,
+        "quadratic": 0.032,
+        "enabled":   true
+      }
     }
   ],
   "cameras": [
@@ -128,29 +152,5 @@
       "pitch": 0,
       "active": false
     }
-  ],
-  "lights": {
-    "directional": [
-      {
-        "name":      "Sun",
-        "direction": [-0.2, -1.0, -0.3],
-        "color":     [1.0, 1.0, 1.0],
-        "intensity": 2.0,
-        "enabled":   true
-      }
-    ],
-    "point": [
-      {
-        "name":      "Lamp",
-        "position":  [0, 2, 0],
-        "color":     [1.0, 0.8, 0.6],
-        "intensity": 3.0,
-        "constant":  1.0,
-        "linear":    0.09,
-        "quadratic": 0.032,
-        "enabled":   true
-      }
-    ],
-    "spot": []
-  }
+  ]
 }

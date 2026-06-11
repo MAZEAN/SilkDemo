@@ -1,44 +1,53 @@
 namespace Centauri.Rendering.Systems;
 
+using System.Numerics;
 using World;
 
 public class LightingSystem
 {
+    public readonly struct ActivePoint(PointLight light, Vector3 position)
+    {
+        public readonly PointLight Light    = light;
+        public readonly Vector3    Position = position;
+    }
+
+    public readonly struct ActiveSpot(SpotLight light, Vector3 position)
+    {
+        public readonly SpotLight Light    = light;
+        public readonly Vector3   Position = position;
+    }
+
     private readonly List<DirectionalLight> _directional = new();
-    private readonly List<PointLight>       _point       = new();
-    private readonly List<SpotLight>        _spot        = new();
+    private readonly List<ActivePoint>      _point       = new();
+    private readonly List<ActiveSpot>       _spot        = new();
 
     public IReadOnlyList<DirectionalLight> DirectionalLights => _directional;
-    public IReadOnlyList<PointLight>       PointLights       => _point;
-    public IReadOnlyList<SpotLight>        SpotLights        => _spot;
+    public IReadOnlyList<ActivePoint>      PointLights       => _point;
+    public IReadOnlyList<ActiveSpot>       SpotLights        => _spot;
     
-    public void Add(DirectionalLight light)
+    public void Collect(IReadOnlyList<Entity> entities)
     {
-        _directional.Add(light);
-    }
+        _directional.Clear();
+        _point.Clear();
+        _spot.Clear();
 
-    public void Add(PointLight light)
-    {
-        _point.Add(light);
-    }
+        foreach (var e in entities)
+        {
+            if (e.Light is not { Enabled: true } light)
+                continue;
 
-    public void Add(SpotLight light)
-    {
-        _spot.Add(light);
-    }
-
-    public void Remove(DirectionalLight light)
-    {
-        _directional.Remove(light);
-    }
-
-    public void Remove(PointLight light)
-    {
-        _point.Remove(light);
-    }
-
-    public void Remove(SpotLight light)
-    {
-        _spot.Remove(light);
+            switch (light)
+            {
+                case DirectionalLight d:
+                    _directional.Add(d);
+                    break;
+                case SpotLight s:
+                    _spot.Add(new ActiveSpot(s, e.Transform.WorldPosition));
+                    break;
+                case PointLight p:
+                    _point.Add(new ActivePoint(p, e.Transform.WorldPosition));
+                    break;
+            }
+        }
     }
 }

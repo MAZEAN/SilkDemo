@@ -117,6 +117,9 @@ public class Transform
     public void Translate(Vector3 delta)       => Position += delta;
     public void RotateLocal(Quaternion delta)   => Rotation = delta * _rotation;
     public void RotateWorld(Quaternion delta)   => Rotation = _rotation * delta;
+    
+    public Vector3 Forward => Vector3.Transform(-Vector3.UnitZ, _rotation);
+    public Vector3 WorldPosition => new(WorldMatrix.M41, WorldMatrix.M42, WorldMatrix.M43);
 
     public void SetEulerAngles(float pitchDeg, float yawDeg, float rollDeg)
     {
