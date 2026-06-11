@@ -5,6 +5,7 @@ using System.Numerics;
 
 using Resources;
 using Utils.Misc;
+using Geometry;
 
 // Immediate-mode primitive drawer for the debug pass: owns the debug shader and a
 // single growable dynamic buffer, and issues line/triangle/mesh draws. Knows nothing

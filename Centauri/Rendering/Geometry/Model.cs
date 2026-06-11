@@ -1,10 +1,9 @@
-namespace Centauri.Rendering.Resources;
+namespace Centauri.Rendering.Geometry;
 
 using Silk.NET.Assimp;
 using Silk.NET.OpenGL;
 using System.Numerics;
 
-using Core;
 using Utils.Geometry;
 
 using AssimpMesh = Silk.NET.Assimp.Mesh;

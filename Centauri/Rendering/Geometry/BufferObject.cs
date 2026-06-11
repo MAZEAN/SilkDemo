@@ -1,7 +1,6 @@
-namespace Centauri.Rendering.Resources;
+namespace Centauri.Rendering.Geometry;
 
 using Silk.NET.OpenGL;
-using System;
 
 public class BufferObject<TDataType> : IDisposable
     where TDataType : unmanaged

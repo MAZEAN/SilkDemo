@@ -1,4 +1,4 @@
-namespace Centauri.Rendering.Resources;
+namespace Centauri.Rendering.Geometry;
 
 using System.Numerics;
 

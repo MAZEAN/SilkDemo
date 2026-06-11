@@ -1,8 +1,10 @@
 namespace Centauri.World;
 
+using System.Numerics;
+
 using Rendering.Resources;
 using Utils.Geometry;
-using System.Numerics;
+using Rendering.Geometry;
 
 public class Entity : IDisposable
 {

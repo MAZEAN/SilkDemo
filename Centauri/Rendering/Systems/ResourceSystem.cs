@@ -6,6 +6,7 @@ using Utils.Caching;
 using Resources;
 using Config;
 using Utils.Misc;
+using Geometry;
 
 public class ResourceSystem : IDisposable
 {

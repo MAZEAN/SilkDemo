@@ -12,7 +12,7 @@ using Utils.Geometry;
 public sealed class DebugRenderer : IDisposable
 {
     private readonly DebugDraw _draw;
-    private readonly Resources.Mesh _cameraMesh;
+    private readonly Geometry.Mesh _cameraMesh;
 
     private bool _active;
 
