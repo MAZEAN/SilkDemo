@@ -14,6 +14,8 @@ public class ResourceSystem : IDisposable
     public AssetCache<GLShader> Shaders { get; }
     public AssetCache<Model> Models { get; }
     public GLTexture DefaultTexture { get; private set; }
+    
+    private readonly string _defaultShaderPath;
 
     public ResourceSystem(GL gl, AppConfig config)
     {
@@ -30,6 +32,9 @@ public class ResourceSystem : IDisposable
             path => new Model(gl, PathResolver.Resolve(path)));
 
         DefaultTexture = CreateDefaultTexture(gl);
+        
+        _defaultShaderPath = config.Render.DefaultShader;
+        DefaultTexture = CreateDefaultTexture(gl);
     }
     
     private static GLTexture CreateDefaultTexture(GL gl)
@@ -37,6 +42,9 @@ public class ResourceSystem : IDisposable
         Span<byte> pixel = [255, 255, 255, 255];
         return new GLTexture(gl, pixel, 1, 1);
     }
+    
+    public Material CreateDefaultMaterial()
+        => new(Shaders.Get(_defaultShaderPath)) { AO = DefaultTexture };
 
     public void Dispose()
     {

@@ -17,7 +17,6 @@
     {
       "name":     "Dragon",
       "model":    "Assets/Objects/reduced_dragon.glb",
-      "material": "Assets/Materials/Default.mat",
       "position": [0, 1, -8]
     },
     {

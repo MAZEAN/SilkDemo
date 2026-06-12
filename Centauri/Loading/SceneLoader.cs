@@ -43,10 +43,12 @@ public class SceneLoader
             var model = !string.IsNullOrEmpty(e.Model)
                 ? _resourceSystem.Models.Get(e.Model)
                 : null;
-
+            
+            // Set default material if not a pure light source
             var material = !string.IsNullOrEmpty(e.Material)
                 ? LoadMaterialFile(e.Material)
-                : null;
+                : model is not null 
+                    ? _resourceSystem.CreateDefaultMaterial() : null;
             
             Light? light = null;
             if (e.Light is { } l)
@@ -69,7 +71,7 @@ public class SceneLoader
         }
     }
     
-    private Light CreateLight(LightDefinition l)
+    private static Light CreateLight(LightDefinition l)
     {
         var color     = new Vector3(l.Color[0], l.Color[1], l.Color[2]);
         var direction = new Vector3(l.Direction[0], l.Direction[1], l.Direction[2]);

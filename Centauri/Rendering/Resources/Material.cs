@@ -11,9 +11,8 @@ public class Material
     public GLTexture? Metallic  { get; set; } // metallic map
     public GLTexture? AO        { get; set; } // ambient occlusion
     public Vector4 Color     { get; set; } = Vector4.One;
-    // fallback scalar values when maps are not provided
     public float RoughnessValue { get; set; } = 0.5f;
-    public float MetallicValue  { get; set; } = 0.0f;
+    public float MetallicValue  { get; set; } = 0.1f;
 
     public Material(GLShader shader)
     {
