@@ -70,8 +70,8 @@ public class Camera
     
     private void UpdateVectors()
     {
-        float yawRad = MathHelper.DegreesToRadians(_yaw);
-        float pitchRad = MathHelper.DegreesToRadians(_pitch);
+        var yawRad = MathHelper.DegreesToRadians(_yaw);
+        var pitchRad = MathHelper.DegreesToRadians(_pitch);
 
         var direction = new Vector3(
             MathF.Cos(yawRad) * MathF.Cos(pitchRad),
@@ -95,8 +95,8 @@ public class Camera
     
     public Ray ScreenPointToRay(Vector2 screen, Vector2 viewport)
     {
-        float ndcX = 2f * screen.X / viewport.X - 1f;
-        float ndcY = 1f - 2f * screen.Y / viewport.Y; // screen Y is down, NDC Y is up
+        var ndcX = 2f * screen.X / viewport.X - 1f;
+        var ndcY = 1f - 2f * screen.Y / viewport.Y; // screen Y is down, NDC Y is up
 
         Matrix4x4.Invert(GetViewMatrix() * GetProjectionMatrix(), out var invVP);
 
