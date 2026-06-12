@@ -5,10 +5,12 @@ using System.Numerics;
 
 using Utils.Misc;
 using World;
+using Config;
 
 public class StatsOverlay
 {
     private readonly ImFontPtr _font;
+    private readonly AppConfig _config;
     public bool IsVisible { get; private set; }
     public void Toggle() => IsVisible = !IsVisible;
 
@@ -18,21 +20,22 @@ public class StatsOverlay
                                            ImGuiWindowFlags.NoBringToFrontOnFocus;
     
     // Colors
-    private readonly Vector4 _defaultColor = new (1.0f, 1.0f, 1.0f, 1.0f);
-    
-    private readonly Vector4 _orangeColor = new (1.0f, 0.8f, 0.2f, 1.0f);
-    private readonly Vector4 _greenColor  = new (0.4f, 0.9f, 0.4f, 1.0f);
-    private readonly Vector4 _blueColor   = new (0.4f, 0.7f, 1.0f, 1.0f);
-    private readonly Vector4 _redColor    = new (1.0f, 0.4f, 0.4f, 1.0f);
+    private static readonly Vector4 DefaultColor = new(1.0f, 1.0f, 1.0f, 1.0f);
+    private static readonly Vector4 OrangeColor  = new(1.0f, 0.8f, 0.2f, 1.0f);
+    private static readonly Vector4 GreenColor   = new(0.4f, 0.9f, 0.4f, 1.0f);
+    private static readonly Vector4 BlueColor    = new(0.4f, 0.7f, 1.0f, 1.0f);
+    private static readonly Vector4 RedColor     = new(1.0f, 0.4f, 0.4f, 1.0f);
+    private static readonly Vector4 IndigoColor  = new(0.6f, 0.0f, 1.0f, 1.0f);
     
     // Window params
     private const int Width = 350;
     private const float Padding = 10f;
     private const float BgAlpha = 0.85f;
 
-    public StatsOverlay(ImFontPtr font)
+    public StatsOverlay(ImFontPtr font, AppConfig config)
     {
         _font = font;
+        _config = config;
     }
     
     public void Render(Scene scene, FrameStats stats)
@@ -52,31 +55,31 @@ public class StatsOverlay
         var cam = scene.GetActiveCamera();
         
         ImGui.PushFont(_font);
-        DrawSection("Performance", _orangeColor, () =>
+        DrawSection("Performance", OrangeColor, () =>
         {
             Row("FPS", $"{stats.FPS:F1}");
             Row("Frame Time", $"{stats.FrameTime:F2} ms");
         });
 
-        DrawSection("Culling", _greenColor, () =>
+        DrawSection("Culling", GreenColor, () =>
         {
             Row("Total", stats.TotalEntities.ToString());
 
             var drawnColor = stats.CulledEntities > 0
-                ? _greenColor
-                : _defaultColor;
+                ? GreenColor
+                : DefaultColor;
 
             RowColored("Drawn", stats.DrawnEntities.ToString(), drawnColor);
-            RowColored("Culled", stats.CulledEntities.ToString(), _redColor);
+            RowColored("Culled", stats.CulledEntities.ToString(), RedColor);
             
             var ratio = stats.TotalEntities > 0
                 ? (stats.CulledEntities / (float)stats.TotalEntities) * 100f 
                 : 0f;
 
-            RowColored("Ratio", $"{ratio:F2}%", _defaultColor);
+            RowColored("Ratio", $"{ratio:F2}%", DefaultColor);
         });
 
-        DrawSection("Renderer", _blueColor, () =>
+        DrawSection("Renderer", BlueColor, () =>
         {
             Row("Draw Calls", stats.DrawCalls.ToString());
             Row("Texture Binds", stats.TextureBinds.ToString());
@@ -84,11 +87,29 @@ public class StatsOverlay
             Row("Total Vertices", stats.TotalVertices.ToString());
         });
 
-        DrawSection("Camera", _redColor, () =>
+        DrawSection("Camera", RedColor, () =>
         {
-            RowColored("Active", cam.Name, _orangeColor);
-            RowColored("Position", FormatVec3(cam.Position), _defaultColor);
-            RowColored("Forward", FormatVec3(cam.Forward),  _defaultColor);
+            RowColored("Active", cam.Name, OrangeColor);
+            RowColored("Position", FormatVec3(cam.Position), DefaultColor);
+            RowColored("Forward", FormatVec3(cam.Forward),  DefaultColor);
+        });
+        
+        DrawSection("Config", IndigoColor, () =>
+        {
+            RowColored("VSync", _config.Window.EnableVSync.ToString(),
+                ColorBoolean(_config.Window.EnableVSync));
+            RowColored("Culling", _config.Debug.EnableCulling.ToString(),
+                ColorBoolean(_config.Debug.EnableCulling));
+            RowColored("DebugView", _config.Debug.ShowDebugView.ToString(),
+                ColorBoolean(_config.Debug.ShowDebugView ));
+            RowColored("BoundingBoxes", _config.Debug.ShowBoundingBoxes.ToString(),
+                ColorBoolean(_config.Debug.ShowBoundingBoxes));
+            RowColored("Frustums", _config.Debug.ShowFrustums.ToString(),
+                ColorBoolean(_config.Debug.ShowFrustums));
+            RowColored("Cameras", _config.Debug.ShowCameras.ToString(),
+                ColorBoolean(_config.Debug.ShowCameras));
+            RowColored("Grid", _config.Debug.ShowGrid.ToString(),
+                ColorBoolean(_config.Debug.ShowGrid));
         });
         ImGui.PopFont();
 
@@ -151,6 +172,11 @@ public class StatsOverlay
         ImGui.PushStyleColor(ImGuiCol.Text, color);
         ImGui.TextUnformatted(value);
         ImGui.PopStyleColor();
+    }
+
+    private static Vector4 ColorBoolean(bool value)
+    {
+        return value ? GreenColor : RedColor;
     }
 
     private static string FormatVec3(Vector3 v)

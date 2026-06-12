@@ -31,15 +31,15 @@ public class RenderingSystem : IDisposable
         _gl            = gl;
         _config        = config;
         _renderer      = new MainRenderer(gl, config);
-        _gridRenderer  = new GridRenderer(gl, config.Window);
-        _debugRenderer = new DebugRenderer(gl);
+        _gridRenderer  = new GridRenderer(gl, config);
+        _debugRenderer = new DebugRenderer(gl, config);
     }
 
     // called after GL and input are both ready
     public void InitializeImGui(IWindow window, IInputContext input)
     {
         _imGui = new ImGuiManager(_gl, _config.ImGui, window, input);
-        _statsOverlay  = new StatsOverlay(_imGui.Font);
+        _statsOverlay  = new StatsOverlay(_imGui.Font, _config);
     }
 
     public void ToggleStatsOverlay() => _statsOverlay.Toggle();
@@ -67,12 +67,12 @@ public class RenderingSystem : IDisposable
 
     public void Render(Scene scene, double deltaTime)
     {
-        if (scene.DebugSettings.ShowGrid)
+        if (_config.Debug.ShowGrid)
             _gridRenderer.Render(scene);
         
         _renderer.Render(scene, (float)deltaTime, ref _stats);
 
-        if (scene.DebugSettings.ShowDebugView)
+        if (_config.Debug.ShowDebugView)
         {
             var active = scene.GetActiveCamera();
             var cullingCamera = scene.GetPrimaryCamera();

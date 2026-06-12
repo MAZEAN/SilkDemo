@@ -10,8 +10,7 @@ internal static class DebugShapes
 {
     public const float CameraScale     =  0.5f;
     public const float CameraModelBase = -0.4f;
-
-    // indices into BoundingBox.GetBoxCorners()
+    
     private static readonly int[] EdgeIndices =
     [
         0,1, 1,3, 3,2, 2,0,  // back face

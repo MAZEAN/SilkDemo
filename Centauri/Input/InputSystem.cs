@@ -74,14 +74,14 @@ public class InputSystem : IDisposable
         {
             case Key.Escape: _window.Close(); break;
             case Key.M: _renderingSystem.ToggleStatsOverlay(); break;
-            case Key.F6: _scene.DebugSettings.ToggleShowGrid(); break;
+            case Key.F6: _config.Debug.ToggleShowGrid(); break;
             case Key.Tab: _scene.CycleCamera(); ResetActiveController(); break;
             
-            case Key.F1: _scene.DebugSettings.ToggleShowDebugView();     break;
-            case Key.F2: _scene.DebugSettings.ToggleShowBoundingBoxes(); break;
-            case Key.F3: _scene.DebugSettings.ToggleShowFrustums();      break;
-            case Key.F4: _scene.DebugSettings.ToggleShowCameras();       break;
-            case Key.F5: _scene.DebugSettings.ToggleEnableCulling();     break;
+            case Key.F1: _config.Debug.ToggleShowDebugView();     break;
+            case Key.F2: _config.Debug.ToggleShowBoundingBoxes(); break;
+            case Key.F3: _config.Debug.ToggleShowFrustums();      break;
+            case Key.F4: _config.Debug.ToggleShowCameras();       break;
+            case Key.F5: _config.Debug.ToggleEnableCulling();     break;
         }
     }
     

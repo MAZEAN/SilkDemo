@@ -13,9 +13,9 @@ public class GridRenderer : IDisposable
     private readonly GL _gl;
     private readonly GLShader _shader;
     private readonly Mesh _mesh;
-    private readonly WindowConfig _config;
+    private readonly AppConfig _config;
 
-    public GridRenderer(GL gl, WindowConfig config)
+    public GridRenderer(GL gl, AppConfig config)
     {
         _gl     = gl;
         _config = config;

@@ -6,11 +6,11 @@ using System.Runtime.CompilerServices;
 
 using World;
 using Utils.Geometry;
+using Config;
 
-// Orchestrates the debug pass: wraps draws in Begin/End and expresses *what* to draw
-// in terms of DebugDraw (GPU) + DebugShapes (geometry).
 public sealed class DebugRenderer : IDisposable
 {
+    private readonly AppConfig _config;
     private readonly DebugDraw _draw;
     private readonly Geometry.Mesh _cameraMesh;
 
@@ -22,11 +22,12 @@ public sealed class DebugRenderer : IDisposable
     private static readonly Vector3 ColorCamera     = new(1.0f, 0.5f, 0.0f);
     private static readonly Vector3 ColorDir        = new(1.0f, 1.0f, 1.0f);
     private static readonly Vector3 ColorFrustum    = new(1.0f, 1.0f, 0.0f);
-    private static readonly Vector3 ColorAABB       = new(0.0f, 1.0f, 0.0f); // visible
-    private static readonly Vector3 ColorAABBCulled = new(1.0f, 0.0f, 0.0f); // culled
+    private static readonly Vector3 ColorAABB       = new(0.0f, 1.0f, 0.0f);
+    private static readonly Vector3 ColorAABBCulled = new(1.0f, 0.0f, 0.0f);
 
-    public DebugRenderer(GL gl)
+    public DebugRenderer(GL gl, AppConfig config)
     {
+        _config     = config;
         _draw       = new DebugDraw(gl);
         _cameraMesh = DebugShapes.BuildCameraMesh(gl);
     }
@@ -54,7 +55,7 @@ public sealed class DebugRenderer : IDisposable
     public void DrawCameras(Scene scene)
     {
         AssertActive();
-        if (!scene.DebugSettings.ShowCameras) return;
+        if (!_config.Debug.ShowCameras) return;
 
         var active = scene.GetActiveCamera();
 
@@ -65,7 +66,7 @@ public sealed class DebugRenderer : IDisposable
             DrawCameraShape(cam);
             DrawDirectionLine(cam);
 
-            if (scene.DebugSettings.ShowFrustums)
+            if (_config.Debug.ShowFrustums)
                 DrawFrustum(cam);
         }
     }
@@ -73,7 +74,7 @@ public sealed class DebugRenderer : IDisposable
     public void DrawAllAABBs(Scene scene, Frustum cullingFrustum)
     {
         AssertActive();
-        if (!scene.DebugSettings.ShowBoundingBoxes) return;
+        if (!_config.Debug.ShowBoundingBoxes) return;
 
         _draw.Model(Matrix4x4.Identity);
 

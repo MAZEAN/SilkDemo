@@ -55,7 +55,7 @@ public class MainRenderer
             {
                 if (entity.Model is not { } model || entity.Material is not { } mat) continue;
                 
-                if (scene.DebugSettings.EnableCulling &&
+                if (_config.Debug.EnableCulling &&
                     !cullingCamera.Frustum.IsVisibleAABB(entity.GetWorldBounds()))
                     continue;
                 

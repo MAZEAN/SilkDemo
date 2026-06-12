@@ -9,7 +9,7 @@ public class AppConfig
     [JsonPropertyName("camera")] public CameraConfig Camera { get; init; } = new();
     [JsonPropertyName("render")] public RenderConfig Render { get; init; } = new();
     [JsonPropertyName("imGui")]  public ImGuiConfig  ImGui  { get; init; } = new();
-    
+    [JsonPropertyName("debug")]  public DebugConfig  Debug  { get; init; } = new();
 }
 
 public class RenderConfig
@@ -48,4 +48,27 @@ public class ImGuiConfig
 {
     [JsonPropertyName("font")] public string Font { get; init; } = "Assets/Fonts/IosevkaCharon-Regular.ttf";
     [JsonPropertyName("fontSize")] public float FontSize { get; init; } = 20f;
+}
+
+public class DebugConfig
+{
+    [JsonPropertyName("enableCulling")]     public bool EnableCulling     { get; set; } = true;
+    [JsonPropertyName("showDebugView")]     public bool ShowDebugView     { get; set; }
+    [JsonPropertyName("showBoundingBoxes")] public bool ShowBoundingBoxes { get; set; }
+    [JsonPropertyName("showFrustums")]      public bool ShowFrustums      { get; set; }
+    [JsonPropertyName("showCameras")]       public bool ShowCameras       { get; set; }
+    [JsonPropertyName("showGrid")]          public bool ShowGrid          { get; set; }
+
+    public void ToggleShowDebugView()
+    {
+        ShowDebugView = !ShowDebugView;
+        
+        ShowBoundingBoxes = ShowFrustums = ShowCameras = ShowDebugView;
+    }
+
+    public void ToggleEnableCulling()     => EnableCulling     = !EnableCulling;
+    public void ToggleShowBoundingBoxes() => ShowBoundingBoxes = !ShowBoundingBoxes;
+    public void ToggleShowFrustums()      => ShowFrustums      = !ShowFrustums;
+    public void ToggleShowCameras()       => ShowCameras       = !ShowCameras;
+    public void ToggleShowGrid()          => ShowGrid          = !ShowGrid;
 }
