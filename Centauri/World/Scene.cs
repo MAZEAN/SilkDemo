@@ -23,6 +23,11 @@ public class Scene
     private readonly Dictionary<string, Camera> _cameraLookup = new();
     private Camera? _activeCamera;
     private Camera? _primaryCamera;
+    
+    public Entity? Selected { get; private set; }
+
+    public void Select(Entity? entity) => Selected = entity;   // entity may be null = deselect
+    public void ClearSelection() => Selected = null;
 
     public IReadOnlyDictionary<GLShader, List<Entity>> GetEntitiesByShader()
     {
@@ -71,6 +76,10 @@ public class Scene
     public void RemoveEntity(Entity entity)
     {
         _entities.Remove(entity);
+
+        if (Selected == entity)        // keep selection valid
+            Selected = null;
+
         _shaderGroupsDirty = true;
     }
 
@@ -132,8 +141,6 @@ public class Scene
 
         _activeCamera = _cameras[index];
     }
-    
-    public Entity? Selected { get; set; }
 
     public Entity? Pick(Ray ray)
     {
@@ -156,10 +163,10 @@ public class Scene
     
     public void Dispose()
     {
+        Selected = null;
+
         foreach (var entity in _entities)
-        {
             entity.Dispose();
-        }
 
         _entities.Clear();
         _shaderGroups.Clear();

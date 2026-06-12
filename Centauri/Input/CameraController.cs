@@ -8,13 +8,13 @@ using Config;
 
 public class CameraController
 {
-    private const float PanSensitivity = 0.01f; // world units per pixel (promote to CameraConfig if you want it tunable)
-
     private readonly Camera _camera;
     private readonly CameraConfig _config;
 
     private Vector2 _lastMouse;
     private bool _seeded;
+    
+    private const float MaxDelta = 400f; 
 
     public CameraController(Camera camera, CameraConfig config)
     {
@@ -50,7 +50,7 @@ public class CameraController
     {
         if (TryDelta(position, out var d))
             // drag right → camera left, drag down → camera up ("grab" feel); flip a sign to taste
-            _camera.UpdatePosition((-_camera.Right * d.X + _camera.Up * d.Y) * PanSensitivity);
+            _camera.UpdatePosition((-_camera.Right * d.X + _camera.Up * d.Y) * _config.PanSensitivity);
     }
 
     public void Zoom(ScrollWheel scroll)
@@ -68,6 +68,13 @@ public class CameraController
 
         delta = position - _lastMouse;
         _lastMouse = position;
+        
+        if (delta.LengthSquared() > MaxDelta * MaxDelta)
+        {
+            delta = Vector2.Zero;
+            return false;
+        }
+        
         return true;
     }
 

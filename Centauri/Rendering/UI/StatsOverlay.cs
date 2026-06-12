@@ -96,6 +96,7 @@ public class StatsOverlay
         
         DrawSection("Config", IndigoColor, () =>
         {
+            RowColored("ViewMode", _config.Input.Mode.ToString(), OrangeColor);
             RowColored("VSync", _config.Window.EnableVSync.ToString(),
                 ColorBoolean(_config.Window.EnableVSync));
             RowColored("Culling", _config.Debug.EnableCulling.ToString(),

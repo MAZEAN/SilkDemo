@@ -13,6 +13,7 @@
     "sensitivityX": 0.1,
     "sensitivityY": 0.1,
     "zoomSensitivity": 1.5,
+    "panSensitivity": 0.1,
     "minZoom": 1.0,
     "maxZoom": 90.0,
     "moveSpeed": 4.0
@@ -30,5 +31,9 @@
   "debug": {
     "enableCulling": true,
     "showGrid": false
+  },
+  "input": {
+    "mode": "Fly",
+    "toggleModeKey": "Tab"
   }
 }

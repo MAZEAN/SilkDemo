@@ -11,12 +11,6 @@ using Rendering.Systems;
 
 public class InputSystem : IDisposable
 {
-    // Fly  : cursor captured, look + WASD + MMB pan + scroll (the flythrough mode)
-    // Edit : cursor free, ImGui interactive, left-click selects (orbit lands in Stage 2)
-    private enum Mode { Fly, Edit }
-
-    private const Key ModeToggleKey = Key.Tab; // Fly <-> Edit
-
     private readonly IWindow _window;
     private readonly Scene _scene;
     private readonly AppConfig _config;
@@ -24,8 +18,7 @@ public class InputSystem : IDisposable
 
     private IKeyboard _keyboard = null!;
     public IInputContext InputContext { get; private set; } = null!;
-
-    private Mode _mode = Mode.Fly;
+    
     private bool _pan;
     private Vector2 _mousePos;
 
@@ -62,7 +55,7 @@ public class InputSystem : IDisposable
 
     public void Update(float deltaTime)
     {
-        if (_mode != Mode.Fly) return;
+        if (_config.Input.Mode != ViewMode.Fly) return;
         GetController(_scene.GetActiveCamera()).UpdateMovement(_keyboard, deltaTime);
     }
 
@@ -70,7 +63,7 @@ public class InputSystem : IDisposable
     {
         _mousePos = position;
 
-        if (_mode != Mode.Fly) return; // Edit-mode camera nav comes in Stage 2
+        if (_config.Input.Mode != ViewMode.Fly) return; // Edit-mode camera nav comes in Stage 2
 
         var controller = GetController(_scene.GetActiveCamera());
         if (_pan) controller.Pan(position);
@@ -79,14 +72,14 @@ public class InputSystem : IDisposable
 
     private void OnMouseDown(IMouse mouse, MouseButton button)
     {
-        switch (_mode)
+        switch (_config.Input.Mode)
         {
-            case Mode.Fly when button == MouseButton.Middle:
+            case ViewMode.Fly when button == MouseButton.Middle:
                 _pan = true;
                 GetController(_scene.GetActiveCamera()).BeginDrag();
                 break;
 
-            case Mode.Edit when button == MouseButton.Left && !_renderingSystem.ImGuiWantsMouse:
+            case ViewMode.Edit when button == MouseButton.Left && !_renderingSystem.ImGuiWantsMouse:
                 PickAtCursor();
                 break;
         }
@@ -103,7 +96,7 @@ public class InputSystem : IDisposable
 
     private void OnMouseWheel(IMouse mouse, ScrollWheel scroll)
     {
-        if (_mode != Mode.Fly) return; // Edit-mode dolly comes in Stage 2
+        if (_config.Input.Mode != ViewMode.Fly) return; // Edit-mode dolly comes in Stage 2
         GetController(_scene.GetActiveCamera()).Zoom(scroll);
     }
 
@@ -111,13 +104,13 @@ public class InputSystem : IDisposable
     {
         var cam = _scene.GetActiveCamera();
         var ray = cam.ScreenPointToRay(_mousePos, new Vector2(_window.Size.X, _window.Size.Y));
-        _scene.Selected = _scene.Pick(ray);
+        _scene.Select(_scene.Pick(ray));
     }
 
     private void OnKeyDown(IKeyboard keyboard, Key key, int code)
     {
         if (key == Key.Escape)    { _window.Close(); return; }
-        if (key == ModeToggleKey) { ToggleMode();    return; }
+        if (key == _config.Input.ToggleModeKey) { ToggleMode(); _scene.ClearSelection(); return; }
 
         if (_renderingSystem.ImGuiWantsKeyboard) return;
 
@@ -137,10 +130,12 @@ public class InputSystem : IDisposable
 
     private void ToggleMode()
     {
-        _mode = _mode == Mode.Fly ? Mode.Edit : Mode.Fly;
+        _config.Input.ToggleMode();
         _pan = false;
-        SetCursor(_mode == Mode.Fly ? CursorMode.Raw : CursorMode.Normal);
-        if (_mode == Mode.Fly) ResetActiveController();
+        
+        SetCursor(_config.Input.Mode == ViewMode.Fly ? CursorMode.Raw : CursorMode.Normal);
+        
+        if (_config.Input.Mode == ViewMode.Fly) ResetActiveController();
     }
 
     private void SetCursor(CursorMode mode)
