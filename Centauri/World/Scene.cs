@@ -5,6 +5,7 @@ using Silk.NET.Windowing;
 
 using Rendering.Resources;
 using Rendering.Systems;
+using Utils.Geometry;
 
 public class Scene
 {
@@ -130,6 +131,27 @@ public class Scene
         index = (index + 1) % _cameras.Count;
 
         _activeCamera = _cameras[index];
+    }
+    
+    public Entity? Selected { get; set; }
+
+    public Entity? Pick(Ray ray)
+    {
+        Entity? hit = null;
+        float best = float.MaxValue;
+
+        foreach (var e in _entities)
+        {
+            if (!e.Enabled || e.Model is null) continue; // only renderable entities are pickable
+
+            if (e.GetWorldBounds().Intersects(ray, out var t) && t >= 0f && t < best)
+            {
+                best = t;
+                hit  = e;
+            }
+        }
+
+        return hit;
     }
     
     public void Dispose()

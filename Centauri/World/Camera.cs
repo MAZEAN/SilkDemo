@@ -65,6 +65,7 @@ public class Camera
     public void AdjustZoom(float zoomDelta)
     {
         Zoom = Math.Clamp(Zoom + zoomDelta, _config.MinZoom, _config.MaxZoom);
+        IsFrustumDirty = true;
     }
     
     private void UpdateVectors()
@@ -90,6 +91,25 @@ public class Camera
             throw new ArgumentException("Height must be positive.");
         AspectRatio = (float)newSize.X / newSize.Y;
         IsFrustumDirty = true;
+    }
+    
+    public Ray ScreenPointToRay(Vector2 screen, Vector2 viewport)
+    {
+        float ndcX = 2f * screen.X / viewport.X - 1f;
+        float ndcY = 1f - 2f * screen.Y / viewport.Y; // screen Y is down, NDC Y is up
+
+        Matrix4x4.Invert(GetViewMatrix() * GetProjectionMatrix(), out var invVP);
+
+        var near = Unproject(new Vector3(ndcX, ndcY, 0f), invVP); // .NET projection: near z = 0
+        var far  = Unproject(new Vector3(ndcX, ndcY, 1f), invVP); // far z = 1
+
+        return new Ray(near, far - near);
+    }
+
+    private static Vector3 Unproject(Vector3 ndc, Matrix4x4 invVP)
+    {
+        var p = Vector4.Transform(new Vector4(ndc, 1f), invVP);
+        return new Vector3(p.X, p.Y, p.Z) / p.W;
     }
     
     public Matrix4x4 GetViewMatrix()

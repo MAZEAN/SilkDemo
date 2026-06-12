@@ -8,69 +8,68 @@ using Config;
 
 public class CameraController
 {
-    private Vector2 _lastMousePosition;
+    private const float PanSensitivity = 0.01f; // world units per pixel (promote to CameraConfig if you want it tunable)
+
     private readonly Camera _camera;
     private readonly CameraConfig _config;
-    
-    private bool _initialized = false;
-    
+
+    private Vector2 _lastMouse;
+    private bool _seeded;
+
     public CameraController(Camera camera, CameraConfig config)
     {
         _camera = camera;
         _config = config;
     }
-    
+
     public void UpdateMovement(IKeyboard keyboard, float deltaTime)
     {
         var moveSpeed = _config.MoveSpeed * deltaTime;
-        
+
         if (keyboard.IsKeyPressed(Key.ShiftLeft))
             moveSpeed *= 2.0f;
 
-        if (keyboard.IsKeyPressed(Key.W))
-            _camera.UpdatePosition(_camera.Forward * moveSpeed);
-
-        if (keyboard.IsKeyPressed(Key.S))
-            _camera.UpdatePosition(-_camera.Forward * moveSpeed);
-
-        if (keyboard.IsKeyPressed(Key.A))
-            _camera.UpdatePosition(-_camera.Right * moveSpeed);
-
-        if (keyboard.IsKeyPressed(Key.D))
-            _camera.UpdatePosition(_camera.Right * moveSpeed);
-
-        if (keyboard.IsKeyPressed(Key.Space))
-            _camera.UpdatePosition(_camera.Up * moveSpeed);
-
-        if (keyboard.IsKeyPressed(Key.ControlLeft))
-            _camera.UpdatePosition(-_camera.Up * moveSpeed);
+        if (keyboard.IsKeyPressed(Key.W))           _camera.UpdatePosition( _camera.Forward * moveSpeed);
+        if (keyboard.IsKeyPressed(Key.S))           _camera.UpdatePosition(-_camera.Forward * moveSpeed);
+        if (keyboard.IsKeyPressed(Key.A))           _camera.UpdatePosition(-_camera.Right   * moveSpeed);
+        if (keyboard.IsKeyPressed(Key.D))           _camera.UpdatePosition( _camera.Right   * moveSpeed);
+        if (keyboard.IsKeyPressed(Key.Space))       _camera.UpdatePosition( _camera.Up      * moveSpeed);
+        if (keyboard.IsKeyPressed(Key.ControlLeft)) _camera.UpdatePosition(-_camera.Up      * moveSpeed);
     }
-    
-    public void OnMouseMove(IMouse mouse, Vector2 position)
+
+    // call when a drag begins so the first move doesn't apply a huge jump
+    public void BeginDrag() => _seeded = false;
+
+    public void Look(Vector2 position)
     {
-        if (!_initialized)
+        if (TryDelta(position, out var d))
+            _camera.ModifyDirection(d.X * _config.SensitivityX, d.Y * _config.SensitivityY);
+    }
+
+    public void Pan(Vector2 position)
+    {
+        if (TryDelta(position, out var d))
+            // drag right → camera left, drag down → camera up ("grab" feel); flip a sign to taste
+            _camera.UpdatePosition((-_camera.Right * d.X + _camera.Up * d.Y) * PanSensitivity);
+    }
+
+    public void Zoom(ScrollWheel scroll)
+        => _camera.AdjustZoom(-scroll.Y * _config.ZoomSensitivity);
+
+    private bool TryDelta(Vector2 position, out Vector2 delta)
+    {
+        if (!_seeded)
         {
-            _lastMousePosition = position;
-            _initialized = true;
-            return;
+            _lastMouse = position;
+            _seeded = true;
+            delta = Vector2.Zero;
+            return false;          // first sample only seeds — no movement
         }
 
-        var xOffset = (position.X - _lastMousePosition.X) * _config.SensitivityX;
-        var yOffset = (position.Y - _lastMousePosition.Y) * _config.SensitivityY;
-
-        _lastMousePosition = position;
-
-        _camera.ModifyDirection(xOffset, yOffset);
+        delta = position - _lastMouse;
+        _lastMouse = position;
+        return true;
     }
 
-    
-    public void OnMouseWheel(IMouse mouse, ScrollWheel scrollWheel)
-    {
-        _camera.AdjustZoom(-scrollWheel.Y * _config.ZoomSensitivity);
-    }
-    
-    public void Reset()
-    {
-        _initialized = false;
-    }
+    public void Reset() => BeginDrag(); // used on camera switch
 }

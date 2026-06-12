@@ -15,6 +15,9 @@ public class ImGuiManager : IDisposable
     private readonly IWindow _window;
     private readonly ImGuiController _controller;
     public ImFontPtr Font { get; private set; }
+    
+    public bool WantsMouseCapture    => ImGui.GetIO().WantCaptureMouse;
+    public bool WantsKeyboardCapture => ImGui.GetIO().WantCaptureKeyboard;
 
     public ImGuiManager(GL gl, ImGuiConfig config, IWindow window, IInputContext input)
     {

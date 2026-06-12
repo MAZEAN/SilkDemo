@@ -25,6 +25,9 @@ public class RenderingSystem : IDisposable
     
     private float _fpsTimer;
     private int   _frameCount;
+    
+    public bool ImGuiWantsMouse    => _imGui?.WantsMouseCapture    ?? false;
+    public bool ImGuiWantsKeyboard => _imGui?.WantsKeyboardCapture ?? false;
 
     public RenderingSystem(GL gl, AppConfig config)
     {
@@ -85,6 +88,13 @@ public class RenderingSystem : IDisposable
         
         if (_statsOverlay.IsVisible)
             _statsOverlay.Render(scene, _stats);
+        
+        if (scene.Selected is not null)
+        {
+            _debugRenderer.Begin(scene.GetActiveCamera());
+            _debugRenderer.DrawSelection(scene);
+            _debugRenderer.End();
+        }
         
         _imGui?.Render();
     }

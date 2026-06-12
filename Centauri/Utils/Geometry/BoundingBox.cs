@@ -56,4 +56,21 @@ public readonly struct BoundingBox
         Min.Y <= other.Max.Y && Max.Y >= other.Min.Y &&
         Min.Z <= other.Max.Z && Max.Z >= other.Min.Z;
     
+    public bool Intersects(Ray ray, out float t)
+    {
+        var invD = new Vector3(1f / ray.Direction.X, 1f / ray.Direction.Y, 1f / ray.Direction.Z);
+
+        var t0 = (Min - ray.Origin) * invD;
+        var t1 = (Max - ray.Origin) * invD;
+
+        var tMin = Vector3.Min(t0, t1);
+        var tMax = Vector3.Max(t0, t1);
+
+        float near = MathF.Max(MathF.Max(tMin.X, tMin.Y), tMin.Z);
+        float far  = MathF.Min(MathF.Min(tMax.X, tMax.Y), tMax.Z);
+
+        t = near;
+        return far >= MathF.Max(near, 0f); // hit, and in front of the ray
+    }
+    
 }

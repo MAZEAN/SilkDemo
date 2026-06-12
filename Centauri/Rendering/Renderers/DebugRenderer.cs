@@ -24,6 +24,7 @@ public sealed class DebugRenderer : IDisposable
     private static readonly Vector3 ColorFrustum    = new(1.0f, 1.0f, 0.0f);
     private static readonly Vector3 ColorAABB       = new(0.0f, 1.0f, 0.0f);
     private static readonly Vector3 ColorAABBCulled = new(1.0f, 0.0f, 0.0f);
+    private static readonly Vector3 ColorSelected = new(1.0f, 1.0f, 1.0f);
 
     public DebugRenderer(GL gl, AppConfig config)
     {
@@ -91,6 +92,16 @@ public sealed class DebugRenderer : IDisposable
             _draw.Color(color, 1.0f);               // opaque wireframe on top
             _draw.Lines(DebugShapes.BoxEdges(corners));
         }
+    }
+    
+    public void DrawSelection(Scene scene)
+    {
+        AssertActive();
+        if (scene.Selected is not { } e || e.Model is null) return;
+
+        _draw.Model(Matrix4x4.Identity);
+        _draw.Color(ColorSelected, 1.0f);
+        _draw.Lines(DebugShapes.BoxEdges(e.GetWorldBounds().GetBoxCorners()));
     }
 
     // ── Private drawing ───────────────────────────────────────────────────────
