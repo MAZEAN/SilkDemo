@@ -116,10 +116,6 @@ public class StatsOverlay
         ImGui.End();
     }
 
-    // ─────────────────────────────────────────────
-    // Helpers
-    // ─────────────────────────────────────────────
-
     private static void SetupWindow()
     {
         var viewport = ImGui.GetMainViewport();

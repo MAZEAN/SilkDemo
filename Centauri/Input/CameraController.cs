@@ -2,6 +2,7 @@ namespace Centauri.Input;
 
 using Silk.NET.Input;
 using System.Numerics;
+
 using World;
 using Config;
 

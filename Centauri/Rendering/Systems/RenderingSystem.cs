@@ -31,7 +31,7 @@ public class RenderingSystem : IDisposable
         _gl            = gl;
         _config        = config;
         _renderer      = new MainRenderer(gl, config);
-        _gridRenderer  = new GridRenderer(gl, config);
+        _gridRenderer  = new GridRenderer(gl);
         _debugRenderer = new DebugRenderer(gl, config);
     }
 

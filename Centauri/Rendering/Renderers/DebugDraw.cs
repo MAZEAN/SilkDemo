@@ -112,9 +112,6 @@ public sealed class DebugDraw : IDisposable
         _gl.DrawArrays(mode, 0, count);
     }
 
-    public void EnableDepthMask() => _gl.DepthMask(true);
-    public void DisableDepthMask() => _gl.DepthMask(false);
-
     public void Dispose()
     {
         _gl.DeleteBuffer(_vbo);

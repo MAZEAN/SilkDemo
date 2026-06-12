@@ -86,9 +86,7 @@ public sealed class DebugRenderer : IDisposable
             var color   = culled ? ColorAABBCulled : ColorAABB;
 
             _draw.Color(color, FaceAlpha);          // translucent fill
-            _draw.EnableDepthMask();
             _draw.Triangles(DebugShapes.BoxFaces(corners));
-            _draw.DisableDepthMask();
 
             _draw.Color(color, 1.0f);               // opaque wireframe on top
             _draw.Lines(DebugShapes.BoxEdges(corners));

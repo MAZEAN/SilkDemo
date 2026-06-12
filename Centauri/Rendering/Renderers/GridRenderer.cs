@@ -3,7 +3,6 @@ namespace Centauri.Rendering.Renderers;
 using Silk.NET.OpenGL;
 
 using World;
-using Config;
 using Resources;
 using Utils.Misc;
 using Geometry;
@@ -13,12 +12,10 @@ public class GridRenderer : IDisposable
     private readonly GL _gl;
     private readonly GLShader _shader;
     private readonly Mesh _mesh;
-    private readonly AppConfig _config;
 
-    public GridRenderer(GL gl, AppConfig config)
+    public GridRenderer(GL gl)
     {
         _gl     = gl;
-        _config = config;
         _shader = new GLShader(gl,
             PathResolver.Resolve("Assets/Shaders/grid.vert"),
             PathResolver.Resolve("Assets/Shaders/grid.frag"));

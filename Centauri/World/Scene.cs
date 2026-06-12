@@ -4,7 +4,6 @@ using System.Diagnostics;
 using Silk.NET.Windowing;
 
 using Rendering.Resources;
-using Config;
 using Rendering.Systems;
 
 public class Scene
