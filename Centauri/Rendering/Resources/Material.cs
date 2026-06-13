@@ -10,7 +10,9 @@ public class Material
     public GLTexture? Roughness { get; set; } // roughness map
     public GLTexture? Metallic  { get; set; } // metallic map
     public GLTexture? AO        { get; set; } // ambient occlusion
-    public Vector4 Color     { get; set; } = Vector4.One;
+    
+    // Editable properties
+    public Vector4 Color        { get; set; } = Vector4.One;
     public float RoughnessValue { get; set; } = 0.5f;
     public float MetallicValue  { get; set; } = 0.1f;
 

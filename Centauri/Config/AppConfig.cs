@@ -62,6 +62,7 @@ public class DebugConfig
     [JsonPropertyName("showFrustums")]      public bool ShowFrustums      { get; set; }
     [JsonPropertyName("showCameras")]       public bool ShowCameras       { get; set; }
     [JsonPropertyName("showGrid")]          public bool ShowGrid          { get; set; }
+    [JsonPropertyName("showStatsOverlay")]  public bool ShowStatsOverlay  { get; set; } = true;
 
     public void ToggleShowDebugView()
     {
@@ -75,6 +76,7 @@ public class DebugConfig
     public void ToggleShowFrustums()      => ShowFrustums      = !ShowFrustums;
     public void ToggleShowCameras()       => ShowCameras       = !ShowCameras;
     public void ToggleShowGrid()          => ShowGrid          = !ShowGrid;
+    public void ToggleShowStatsOverlay() => ShowStatsOverlay = !ShowStatsOverlay;
 }
 
 public enum ViewMode { Fly, Edit }

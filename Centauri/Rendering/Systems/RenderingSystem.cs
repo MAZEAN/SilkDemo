@@ -45,7 +45,7 @@ public class RenderingSystem : IDisposable
         _statsOverlay  = new StatsOverlay(_imGui.Font, _config);
     }
 
-    public void ToggleStatsOverlay() => _statsOverlay.Toggle();
+    public void ToggleStatsOverlay() => _config.Debug.ToggleShowStatsOverlay();
 
     public void Update(float deltaTime)
     {
@@ -86,7 +86,7 @@ public class RenderingSystem : IDisposable
             _debugRenderer.End();
         }
         
-        if (_statsOverlay.IsVisible)
+        if (_config.Debug.ShowStatsOverlay)
             _statsOverlay.Render(scene, _stats);
         
         if (scene.Selected is not null)

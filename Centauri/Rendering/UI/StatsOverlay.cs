@@ -11,8 +11,6 @@ public class StatsOverlay
 {
     private readonly ImFontPtr _font;
     private readonly AppConfig _config;
-    public bool IsVisible { get; private set; }
-    public void Toggle() => IsVisible = !IsVisible;
 
     private const ImGuiWindowFlags Flags = ImGuiWindowFlags.NoDecoration           |
                                            ImGuiWindowFlags.NoMove                 |
@@ -40,9 +38,6 @@ public class StatsOverlay
     
     public void Render(Scene scene, FrameStats stats)
     {
-        if (!IsVisible)
-            return;
-
         SetupWindow();
 
         if (!ImGui.Begin("##StatsOverlay", Flags))

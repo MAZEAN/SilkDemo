@@ -8,6 +8,7 @@ using World;
 using Resources;
 using Systems;
 using Utils.Misc;
+using Geometry;
 
 public class MainRenderer
 {
@@ -51,8 +52,9 @@ public class MainRenderer
             UploadGlobalUniforms(shader, viewCamera);
             UploadLighting(shader, scene.Lighting);
 
-            foreach (var entity in entities.Where(entity => entity.Enabled))
+            foreach (var entity in entities)
             {
+                if (!entity.Enabled) continue;
                 if (entity.Model is not { } model || entity.Material is not { } mat) continue;
 
                 if (_config.Debug.EnableCulling && !cullingCamera.Frustum.IsVisibleAABB(entity.GetWorldBounds()))
@@ -60,28 +62,32 @@ public class MainRenderer
                     stats.CulledEntities++; 
                     continue;
                 }
-                    
                 
                 stats.TextureBinds += BindMaterialTextures(mat);
                 stats.DrawnEntities++;
-                
-                UploadMaterialFlags(shader, mat);
-                UploadTransform(shader, entity);
-                UploadMaterialProperties(shader, mat, entity);
 
-                foreach (var mesh in model.Meshes)
-                {
-                    mesh.Bind();
-                    unsafe
-                    {
-                        _gl.DrawElements(PrimitiveType.Triangles, mesh.IndexCount,
-                            DrawElementsType.UnsignedInt, (void*)0);
-                    }
-                    stats.DrawCalls++;
-                    stats.TotalIndices += (int) mesh.IndexCount;
-                    stats.TotalVertices += (int) mesh.VertexCount;
-                }
+                DrawEntity(entity, shader, mat, model, ref stats);
             }
+        }
+    }
+
+    private void DrawEntity(Entity entity, GLShader shader, Material mat, Model model, ref FrameStats stats)
+    {
+        UploadMaterialFlags(shader, mat);
+        UploadTransform(shader, entity);
+        UploadMaterialProperties(shader, mat, entity);
+
+        foreach (var mesh in model.Meshes)
+        {
+            mesh.Bind();
+            unsafe
+            {
+                _gl.DrawElements(PrimitiveType.Triangles, mesh.IndexCount,
+                    DrawElementsType.UnsignedInt, (void*)0);
+            }
+            stats.DrawCalls++;
+            stats.TotalIndices += (int) mesh.IndexCount;
+            stats.TotalVertices += (int) mesh.VertexCount;
         }
     }
     
