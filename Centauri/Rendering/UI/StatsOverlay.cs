@@ -1,5 +1,3 @@
-using System.Globalization;
-
 namespace Centauri.Rendering.UI;
 
 using ImGuiNET;
@@ -11,120 +9,91 @@ using Config;
 
 public class StatsOverlay
 {
-    private readonly ImFontPtr _font;
-    private readonly AppConfig _config;
-
-    private const ImGuiWindowFlags Flags = ImGuiWindowFlags.NoDecoration           |
-                                           ImGuiWindowFlags.NoMove                 |
-                                           ImGuiWindowFlags.NoSavedSettings        |
-                                           ImGuiWindowFlags.NoBringToFrontOnFocus  |
+    private const ImGuiWindowFlags Flags = ImGuiWindowFlags.NoDecoration          |
+                                           ImGuiWindowFlags.NoMove                |
+                                           ImGuiWindowFlags.NoSavedSettings       |
+                                           ImGuiWindowFlags.NoBringToFrontOnFocus |
                                            ImGuiWindowFlags.AlwaysAutoResize;
-    
-    // Colors
-    private static readonly Vector4 DefaultColor     = new(1.0f, 1.0f, 1.0f, 1.0f);
-    
-    private static readonly Vector4 PerformanceColor = new(1.00f, 0.75f, 0.20f, 1f);
-    private static readonly Vector4 CullingColor     = new(0.35f, 0.85f, 0.45f, 1f);
-    private static readonly Vector4 RendererColor    = new(0.35f, 0.65f, 1.00f, 1f);
-    private static readonly Vector4 CameraColor      = new(1.00f, 0.45f, 0.45f, 1f);
-    private static readonly Vector4 ConfigColor      = new(0.75f, 0.50f, 1.00f, 1f);
-    
-    private static readonly Vector4 OrangeColor      = new(1.0f, 0.8f, 0.2f, 1.0f);
-    private static readonly Vector4 GreenColor       = new(0.4f, 0.9f, 0.4f, 1.0f);
-    private static readonly Vector4 BlueColor        = new(0.4f, 0.7f, 1.0f, 1.0f);
-    private static readonly Vector4 RedColor         = new(1.0f, 0.4f, 0.4f, 1.0f);
-    private static readonly Vector4 IndigoColor      = new(0.6f, 0.0f, 1.0f, 1.0f);
-    
-    private static readonly Vector4 EnabledColor     = new(0.45f, 0.90f, 0.45f, 1f);
-    private static readonly Vector4 DisabledColor    = new(1.0f, 0.2f, 0.2f, 1.0f);
-    
-    // Window params
-    private const int Width = 350;
+
+    private const ImGuiTableFlags TableFlags = ImGuiTableFlags.SizingStretchSame |
+                                               ImGuiTableFlags.BordersInnerV;
+
+    private const int   Width   = 350;
     private const float Padding = 10f;
     private const float BgAlpha = 0.85f;
 
+    private readonly ImFontPtr _font;
+    private readonly AppConfig _config;
+
     public StatsOverlay(ImFontPtr font, AppConfig config)
     {
-        _font = font;
+        _font   = font;
         _config = config;
     }
-    
+
     public void Render(Scene scene, FrameStats stats)
     {
         SetupWindow();
 
         if (!ImGui.Begin("##StatsOverlay", Flags))
         {
-            Console.WriteLine("ImGui couldn't start");
             ImGui.End();
             return;
         }
 
         var cam = scene.GetActiveCamera();
-        
         ImGui.PushFont(_font);
-        DrawSection("Performance", PerformanceColor, () =>
+
+        Section("Performance",GUI.Amber, () =>
         {
-            Row("FPS", FormatFloat(stats.FPS));
-            Row("Frame Time", $"{FormatFloat(stats.FrameTime)} ms");
+            Row("FPS", GUI.Float(stats.FPS));
+            Row("Frame Time", $"{GUI.Float(stats.FrameTime)} ms");
         });
 
-        DrawSection("Culling", CullingColor, () =>
+        Section("Culling",GUI.Green, () =>
         {
             Row("Total", stats.TotalEntities.ToString());
+            RowColored("Drawn", stats.DrawnEntities.ToString(),
+                stats.CulledEntities > 0 ? GUI.Green : GUI.White);
+            RowColored("Culled", stats.CulledEntities.ToString(),GUI.Red);
 
-            var drawnColor = stats.CulledEntities > 0
-                ? GreenColor
-                : DefaultColor;
-
-            RowColored("Drawn", stats.DrawnEntities.ToString(), drawnColor);
-            RowColored("Culled", stats.CulledEntities.ToString(), RedColor);
-            
             var ratio = stats.TotalEntities > 0
-                ? (stats.CulledEntities / (float)stats.TotalEntities) * 100f 
+                ? stats.CulledEntities / (float)stats.TotalEntities * 100f
                 : 0f;
-
-            Row("Ratio", $"{FormatFloat(ratio)}%");
+            Row("Ratio", $"{GUI.Float(ratio)} %");
         });
 
-        DrawSection("Renderer", RendererColor, () =>
+        Section("Renderer",GUI.Blue, () =>
         {
-            Row("Draw Calls", stats.DrawCalls.ToString());
-            Row("Texture Binds", stats.TextureBinds.ToString());
-            Row("Total Indices", stats.TotalIndices.ToString());
+            Row("Draw Calls",     stats.DrawCalls.ToString());
+            Row("Texture Binds",  stats.TextureBinds.ToString());
+            Row("Total Indices",  stats.TotalIndices.ToString());
             Row("Total Vertices", stats.TotalVertices.ToString());
         });
 
-        DrawSection("Camera", CameraColor, () =>
+        Section("Camera",GUI.Red, () =>
         {
-            RowColored("Active", cam.Name, OrangeColor);
-            RowColored("Position", FormatVec3(cam.Position), BlueColor);
-            RowColored("Forward",  FormatVec3(cam.Forward), GreenColor);
-            Row("Yaw", FormatSignedFloat(cam.Yaw));
-            Row("Pitch", FormatSignedFloat(cam.Pitch));
-            Row("Zoom", FormatFloat(cam.Zoom));
+            RowColored("Active", cam.Name,GUI.Amber);
+            RowColored("Position", GUI.Vec3(cam.Position),GUI.Blue);
+            RowColored("Forward", GUI.Vec3(cam.Forward),GUI.Green);
+            Row("Yaw", GUI.SignedFloat(cam.Yaw));
+            Row("Pitch",GUI.SignedFloat(cam.Pitch));
+            Row("Zoom", GUI.Float(cam.Zoom));
         });
-        
-        DrawSection("Config", ConfigColor, () =>
-        {
-            RowColored("ViewMode", _config.Input.Mode.ToString(), OrangeColor);
-            RowColored("VSync", _config.Window.EnableVSync.ToString(),
-                ColorBoolean(_config.Window.EnableVSync));
-            RowColored("Culling", _config.Debug.EnableCulling.ToString(),
-                ColorBoolean(_config.Debug.EnableCulling));
-            RowColored("DebugView", _config.Debug.ShowDebugView.ToString(),
-                ColorBoolean(_config.Debug.ShowDebugView ));
-            RowColored("BoundingBoxes", _config.Debug.ShowBoundingBoxes.ToString(),
-                ColorBoolean(_config.Debug.ShowBoundingBoxes));
-            RowColored("Frustums", _config.Debug.ShowFrustums.ToString(),
-                ColorBoolean(_config.Debug.ShowFrustums));
-            RowColored("Cameras", _config.Debug.ShowCameras.ToString(),
-                ColorBoolean(_config.Debug.ShowCameras));
-            RowColored("Grid", _config.Debug.ShowGrid.ToString(),
-                ColorBoolean(_config.Debug.ShowGrid));
-        });
-        ImGui.PopFont();
 
+        Section("Config",GUI.Purple, () =>
+        {
+            RowColored("ViewMode", _config.Input.Mode.ToString(),GUI.Amber);
+            ConfigRow("VSync",         _config.Window.EnableVSync);
+            ConfigRow("Culling",       _config.Debug.EnableCulling);
+            ConfigRow("DebugView",     _config.Debug.ShowDebugView);
+            ConfigRow("BoundingBoxes", _config.Debug.ShowBoundingBoxes);
+            ConfigRow("Frustums",      _config.Debug.ShowFrustums);
+            ConfigRow("Cameras",       _config.Debug.ShowCameras);
+            ConfigRow("Grid",          _config.Debug.ShowGrid);
+        });
+
+        ImGui.PopFont();
         ImGui.End();
     }
 
@@ -142,18 +111,15 @@ public class StatsOverlay
         ImGui.SetNextWindowBgAlpha(BgAlpha);
     }
 
-    private static void DrawSection(string title, Vector4 color, Action content)
+    private static void Section(string title, Vector4 accent, Action rows)
     {
-        ImGui.TextColored(color, title);
-        ImGui.Separator();
+       GUI.SectionTitle(title, accent);
 
-        if (ImGui.BeginTable($"##{title}_table", 2, ImGuiTableFlags.SizingStretchSame | ImGuiTableFlags.BordersInnerV))
+        if (ImGui.BeginTable($"##{title}", 2, TableFlags))
         {
             ImGui.TableSetupColumn("Label", ImGuiTableColumnFlags.WidthFixed, 120f);
             ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch);
-
-            content();
-
+            rows();
             ImGui.EndTable();
         }
 
@@ -163,10 +129,8 @@ public class StatsOverlay
     private static void Row(string label, string value)
     {
         ImGui.TableNextRow();
-
         ImGui.TableNextColumn();
         ImGui.TextUnformatted(label);
-
         ImGui.TableNextColumn();
         ImGui.TextUnformatted(value);
     }
@@ -174,38 +138,14 @@ public class StatsOverlay
     private static void RowColored(string label, string value, Vector4 color)
     {
         ImGui.TableNextRow();
-
         ImGui.TableNextColumn();
         ImGui.TextUnformatted(label);
-
         ImGui.TableNextColumn();
         ImGui.PushStyleColor(ImGuiCol.Text, color);
         ImGui.TextUnformatted(value);
         ImGui.PopStyleColor();
     }
 
-    private static Vector4 ColorBoolean(bool value)
-    {
-        return value ? EnabledColor : DisabledColor;
-    }
-
-    private static string FormatVec3(Vector3 v)
-    {
-        return string.Format(
-            CultureInfo.CurrentCulture,
-            "({0,8:+0.00;-0.00}, {1,8:+0.00;-0.00}, {2,8:+0.00;-0.00})",
-            v.X, v.Y, v.Z);
-    }
-    
-    private static string FormatFloat(float value, int decimals = 2)
-    {
-        return value.ToString($"F{decimals}",
-            CultureInfo.CurrentCulture);
-    }
-    
-    private static string FormatSignedFloat(float value, int decimals = 2)
-    {
-        return value.ToString($"+0.{new string('0', decimals)};-0.{new string('0', decimals)}",
-            CultureInfo.CurrentCulture);
-    }
+    private static void ConfigRow(string label, bool value) =>
+        RowColored(label, value.ToString(),GUI.Bool(value));
 }

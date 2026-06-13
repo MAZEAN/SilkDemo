@@ -11,12 +11,12 @@ public class InspectorPanel
     private const float Height  = 400f;
     private const float Padding = 10f;
 
+    private static readonly string[] LightTypes = ["None", "Directional", "Point", "Spot"];
+
     private readonly ImFontPtr _font;
 
     private Entity? _tracked;
-    private Vector3 _euler;   // working rotation (deg) for the selected entity
-    
-    private static readonly string[] LightTypes = ["None", "Directional", "Point", "Spot"];
+    private Vector3 _euler;   // cached working rotation (deg) for the selected entity
 
     public InspectorPanel(ImFontPtr font) => _font = font;
 
@@ -32,21 +32,22 @@ public class InspectorPanel
 
         ImGui.PushFont(_font);
 
-        var entity = scene.Selected;
-        if (entity is null)
+        if (scene.Selected is not { } entity)
         {
             ImGui.TextDisabled("No entity selected");
         }
         else
         {
-            if (!ReferenceEquals(entity, _tracked))
+            if (!ReferenceEquals(entity, _tracked))   // re-seed euler on selection change
             {
                 _tracked = entity;
                 _euler   = entity.Transform.EulerAngles;
             }
 
+            GUI.Check("Enabled", entity.Enabled, v => entity.Enabled = v);
+            ImGui.Spacing();
+
             DrawTransform(entity);
-            DrawEntityFlags(entity);
             DrawMaterial(entity);
             DrawLight(entity);
         }
@@ -59,61 +60,39 @@ public class InspectorPanel
     {
         var vp = ImGui.GetMainViewport();
         ImGui.SetNextWindowPos(
-            new Vector2(vp.WorkPos.X + Padding, vp.WorkPos.Y + Padding),
-            ImGuiCond.FirstUseEver);
+            new Vector2(vp.WorkPos.X + Padding, vp.WorkPos.Y + Padding), ImGuiCond.FirstUseEver);
         ImGui.SetNextWindowSize(new Vector2(Width, Height), ImGuiCond.FirstUseEver);
         ImGui.SetNextWindowCollapsed(false, ImGuiCond.FirstUseEver);
     }
 
     private void DrawTransform(Entity e)
     {
-        if (!ImGui.CollapsingHeader("Transform", ImGuiTreeNodeFlags.DefaultOpen))
-            return;
+       GUI.SectionTitle("Transform",GUI.Amber);
 
         var t = e.Transform;
+       GUI.Drag3("Position", t.Position, v => t.Position = v);
 
-        var pos = t.Position;
-        if (ImGui.DragFloat3("Position", ref pos, 0.05f))
-            t.Position = pos;
-
-        if (ImGui.DragFloat3("Rotation", ref _euler, 0.5f))   // pitch, yaw, roll
+        if (ImGui.DragFloat3("Rotation", ref _euler, 0.5f))   // cached euler (pitch, yaw, roll)
             t.SetEulerAngles(_euler.X, _euler.Y, _euler.Z);
 
-        var scale = t.Scale;
-        if (ImGui.DragFloat3("Scale", ref scale, 0.05f))
-            t.Scale = scale;
-    }
-
-    private static void DrawEntityFlags(Entity e)
-    {
-        var enabled = e.Enabled;
-        if (ImGui.Checkbox("Enabled", ref enabled))
-            e.Enabled = enabled;
+       GUI.Drag3("Scale", t.Scale, v => t.Scale = v);
+        ImGui.Spacing();
     }
 
     private static void DrawMaterial(Entity e)
     {
         if (e.Material is not { } mat) return;
-        if (!ImGui.CollapsingHeader("Material", ImGuiTreeNodeFlags.DefaultOpen))
-            return;
 
-        var color = mat.Color;
-        if (ImGui.ColorEdit4("Color", ref color))
-            mat.Color = color;
-
-        var rough = mat.RoughnessValue;
-        if (ImGui.SliderFloat("Roughness", ref rough, 0f, 1f))   // lower = shinier
-            mat.RoughnessValue = rough;
-
-        var metal = mat.MetallicValue;
-        if (ImGui.SliderFloat("Metallic", ref metal, 0f, 1f))
-            mat.MetallicValue = metal;
+       GUI.SectionTitle("Material",GUI.Blue);
+       GUI.Color4("Color",     mat.Color,          v => mat.Color          = v);
+       GUI.Slider("Roughness", mat.RoughnessValue, v => mat.RoughnessValue = v, 0f, 1f); // lower = shinier
+       GUI.Slider("Metallic",  mat.MetallicValue,  v => mat.MetallicValue  = v, 0f, 1f);
+        ImGui.Spacing();
     }
-    
+
     private static void DrawLight(Entity e)
     {
-        if (!ImGui.CollapsingHeader("Light", ImGuiTreeNodeFlags.DefaultOpen))
-            return;
+       GUI.SectionTitle("Light",GUI.Green);
 
         var typeIndex = e.Light switch
         {
@@ -127,54 +106,31 @@ public class InspectorPanel
         if (ImGui.Combo("Type", ref typeIndex, LightTypes, LightTypes.Length))
             e.Light = typeIndex == 0 ? null : CreateLight(typeIndex, e.Light);
 
-        if (e.Light is not { } light)
-            return; // entity has no light — nothing more to draw
+        if (e.Light is not { } light) return;
 
-        var enabled = light.Enabled;
-        if (ImGui.Checkbox("Light Enabled", ref enabled))
-            light.Enabled = enabled;
-
-        var color = light.Color;
-        if (ImGui.ColorEdit3("Color##light", ref color))
-            light.Color = color;
-
-        var intensity = light.Intensity;
-        if (ImGui.DragFloat("Intensity", ref intensity, 0.05f, 0f, 100f))
-            light.Intensity = intensity;
+       GUI.Check("Light Enabled", light.Enabled,   v => light.Enabled   = v);
+       GUI.Color3("Color##light", light.Color,     v => light.Color     = v);
+       GUI.Drag("Intensity",      light.Intensity, v => light.Intensity = v, 0.05f, 0f, 100f);
 
         switch (light)
         {
             case DirectionalLight d:
-            {
-                var dir = d.Direction;
-                if (ImGui.DragFloat3("Direction", ref dir, 0.01f)) d.Direction = dir;
+                GUI.Drag3("Direction", d.Direction, v => d.Direction = v, 0.01f);
                 break;
-            }
             case SpotLight s:
-            {
-                var dir = s.Direction;
-                if (ImGui.DragFloat3("Direction", ref dir, 0.01f)) s.Direction = dir;
-
-                var inner = s.InnerCutoff;
-                if (ImGui.DragFloat("Inner Cutoff", ref inner, 0.5f, 0f, 90f)) s.InnerCutoff = inner;
-
-                var outer = s.OuterCutoff;
-                if (ImGui.DragFloat("Outer Cutoff", ref outer, 0.5f, 0f, 90f)) s.OuterCutoff = outer;
+               GUI.Drag3("Direction",   s.Direction,   v => s.Direction   = v, 0.01f);
+               GUI.Drag("Inner Cutoff", s.InnerCutoff, v => s.InnerCutoff = v, 0.5f, 0f, 90f);
+               GUI.Drag("Outer Cutoff", s.OuterCutoff, v => s.OuterCutoff = v, 0.5f, 0f, 90f);
                 break;
-            }
             case PointLight p:
-            {
-                var linear = p.Linear;
-                if (ImGui.DragFloat("Linear", ref linear, 0.001f, 0f, 1f)) p.Linear = linear;
-
-                var quad = p.Quadratic;
-                if (ImGui.DragFloat("Quadratic", ref quad, 0.001f, 0f, 1f)) p.Quadratic = quad;
+               GUI.Drag("Linear",    p.Linear,    v => p.Linear    = v, 0.001f, 0f, 1f);
+               GUI.Drag("Quadratic", p.Quadratic, v => p.Quadratic = v, 0.001f, 0f, 1f);
                 break;
-            }
         }
+
+        ImGui.Spacing();
     }
 
-    // new type instance, carrying over the shared base fields when switching
     private static Light CreateLight(int typeIndex, Light? from)
     {
         Light light = typeIndex switch
@@ -186,11 +142,10 @@ public class InspectorPanel
         };
 
         if (from is null) return light;
-        
+
         light.Color     = from.Color;
         light.Intensity = from.Intensity;
         light.Enabled   = from.Enabled;
-
         return light;
     }
 }
