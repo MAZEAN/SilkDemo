@@ -75,14 +75,17 @@ public class RenderingSystem : IDisposable
         
         _mainRenderer.Render(scene, (float)deltaTime, ref _stats);
 
-        if (_config.Debug.ShowDebugView)
+        if (_config.Debug.ShowDebugView || scene.Selected is not null)
         {
             var active = scene.GetActiveCamera();
-            var cullingCamera = scene.GetPrimaryCamera();
-
             _debugRenderer.Begin(active);
-            _debugRenderer.DrawCameras(scene);
-            _debugRenderer.DrawAllAABBs(scene, cullingCamera.Frustum);
+
+            if (_config.Debug.ShowDebugView)
+            {
+                _debugRenderer.DrawCameras(scene);
+                _debugRenderer.DrawAllAABBs(scene, scene.GetPrimaryCamera().Frustum);
+            }
+
             _debugRenderer.DrawSelection(scene);
             _debugRenderer.End();
         }

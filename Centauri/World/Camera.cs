@@ -18,10 +18,12 @@ public class Camera
     public Vector3 Up { get; private set; }
 
     private readonly Vector3 _worldUp;
-    private float _yaw;
-    private float _pitch;
+    
+    public float Yaw { get; private set; }
+    public float Pitch { get; private set; }
     public float Zoom { get; private set; }
     public float AspectRatio { get; private set; }
+    
     public Frustum Frustum { get; private set; }
     public bool IsFrustumDirty { get; private set; } = true;
     
@@ -35,8 +37,8 @@ public class Camera
         Position = position;
         _worldUp = worldUp;
 
-        _yaw = yaw;
-        _pitch = pitch;
+        Yaw = yaw;
+        Pitch = pitch;
         Zoom = config.FOV;
 
         Frustum = new Frustum(this, _config);
@@ -52,11 +54,11 @@ public class Camera
     
     public void ModifyDirection(float xOffset, float yOffset)
     {
-        _yaw   += xOffset;
-        _pitch += -yOffset;
+        Yaw   += xOffset;
+        Pitch += -yOffset;
 
         // clamp pitch
-        _pitch = Math.Clamp(_pitch, -89f, 89f);
+        Pitch = Math.Clamp(Pitch, -89f, 89f);
 
         UpdateVectors();
         IsFrustumDirty = true;
@@ -70,8 +72,8 @@ public class Camera
     
     private void UpdateVectors()
     {
-        var yawRad = MathHelper.DegreesToRadians(_yaw);
-        var pitchRad = MathHelper.DegreesToRadians(_pitch);
+        var yawRad = MathHelper.DegreesToRadians(Yaw);
+        var pitchRad = MathHelper.DegreesToRadians(Pitch);
 
         var direction = new Vector3(
             MathF.Cos(yawRad) * MathF.Cos(pitchRad),

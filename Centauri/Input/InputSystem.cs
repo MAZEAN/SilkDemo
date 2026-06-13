@@ -96,7 +96,6 @@ public class InputSystem : IDisposable
 
     private void OnMouseWheel(IMouse mouse, ScrollWheel scroll)
     {
-        if (_config.Input.Mode != ViewMode.Fly) return; // Edit-mode dolly comes in Stage 2
         GetController(_scene.GetActiveCamera()).Zoom(scroll);
     }
 

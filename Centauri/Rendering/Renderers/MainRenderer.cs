@@ -46,7 +46,7 @@ public class MainRenderer : IDisposable
         var view          = viewCamera.GetViewMatrix();
         var cameraPosition = viewCamera.Position;
 
-        ResetFrameStats(scene, ref stats);
+        ResetFrameStats(ref stats);
 
         scene.Lighting.Collect(scene.Entities);
         _lightBuffer.Update(scene.Lighting);
@@ -226,7 +226,7 @@ public class MainRenderer : IDisposable
         Array.Fill(_boundTextures, uint.MaxValue);
     }
     
-    private static void ResetFrameStats(Scene scene, ref FrameStats stats)
+    private static void ResetFrameStats(ref FrameStats stats)
     {
         stats.DrawnEntities  = 0;
         stats.CulledEntities = 0;

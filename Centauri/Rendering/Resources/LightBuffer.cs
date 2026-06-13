@@ -67,7 +67,7 @@ public sealed class LightBuffer : IDisposable
         offset += DirFloats;
 
         // ── point lights ─────────────────────────────────────────────────────
-        var pointCount = System.Math.Min(lights.PointLights.Count, MaxPoint);
+        var pointCount = Math.Min(lights.PointLights.Count, MaxPoint);
         for (var i = 0; i < pointCount; i++)
         {
             var a = lights.PointLights[i];
@@ -83,7 +83,7 @@ public sealed class LightBuffer : IDisposable
         offset += PointFloats * MaxPoint;
 
         // ── spotlights ───────────────────────────────────────────────────────
-        var spotCount = System.Math.Min(lights.SpotLights.Count, MaxSpot);
+        var spotCount = Math.Min(lights.SpotLights.Count, MaxSpot);
         for (var i = 0; i < spotCount; i++)
         {
             var a = lights.SpotLights[i];
