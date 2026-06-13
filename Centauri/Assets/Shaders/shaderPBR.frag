@@ -5,32 +5,25 @@ const float PI               = 3.14159265359;
 const int   MAX_POINT_LIGHTS = 16;
 const int   MAX_SPOT_LIGHTS  = 16;
 
-// ─── structs ──────────────────────────────────────────────────────────────────
+// ─── light structs (std140 — every member padded to vec4) ───────────────────────
 struct DirLight {
-    vec3  direction;
-    vec3  color;
-    float intensity;
+    vec4 direction; // xyz
+    vec4 color;     // xyz
+    vec4 params;    // x = intensity
 };
 
 struct PointLight {
-    vec3  position;
-    vec3  color;
-    float intensity;
-    float constant;
-    float linear;
-    float quadratic;
+    vec4 position;  // xyz
+    vec4 color;     // xyz
+    vec4 params;    // x = intensity, y = constant, z = linear, w = quadratic
 };
 
 struct SpotLight {
-    vec3  position;
-    vec3  direction;
-    vec3  color;
-    float intensity;
-    float constant;
-    float linear;
-    float quadratic;
-    float innerCutoff; // pre-converted to cosine on CPU
-    float outerCutoff; // pre-converted to cosine on CPU
+    vec4 position;  // xyz
+    vec4 direction; // xyz
+    vec4 color;     // xyz
+    vec4 params;    // x = intensity, y = constant, z = linear, w = quadratic
+    vec4 cutoffs;   // x = innerCos, y = outerCos
 };
 
 // ─── uniforms ─────────────────────────────────────────────────────────────────
@@ -49,15 +42,17 @@ uniform float uRoughnessValue;
 uniform float uMetallicValue;
 uniform vec4  uColor;
 
-// ─── lighting ──────────────────────────────────────────────────────────────────
 uniform vec3       uCameraPos;
-uniform DirLight   uDirLight;
 
-uniform PointLight uPointLights[MAX_POINT_LIGHTS];
-uniform int        uPointLightCount;
 
-uniform SpotLight  uSpotLights[MAX_SPOT_LIGHTS];
-uniform int        uSpotLightCount;
+// ─── lighting ──────────────────────────────────────────────────────────────────
+// shared lights UBO (binding 0) — uploaded once per frame for all lit shaders
+layout(std140) uniform Lights {
+    DirLight   uDir;
+    PointLight uPoints[MAX_POINT_LIGHTS];
+    SpotLight  uSpots[MAX_SPOT_LIGHTS];
+    ivec4      uCounts; // x = pointCount, y = spotCount, z = hasDir
+};
 
 // ─── inputs ───────────────────────────────────────────────────────────────────
 in vec2 fUv;
@@ -133,26 +128,19 @@ vec3 CalcPBR(vec3 L, vec3 radiance, vec3 N, vec3 V, vec3 albedo, float roughness
 
 vec3 CalcSpotLight(SpotLight light, vec3 N, vec3 V, vec3 albedo, float roughness, float metallic)
 {
-    vec3  lightDir    = light.position - fFragPos;
+    vec3  lightDir    = light.position.xyz - fFragPos;
     float dist        = length(lightDir);
     vec3  L           = normalize(lightDir);
 
-    // attenuation — same as point light
-    float attenuation = 1.0 / (light.constant
-                      + light.linear    * dist
-                      + light.quadratic * dist * dist);
+    float attenuation = 1.0 / (light.params.y
+    + light.params.z * dist
+    + light.params.w * dist * dist);
 
-    // spotlight cone — angle between light direction and fragment direction
-    float theta     = dot(L, normalize(-light.direction));
-    float epsilon   = light.innerCutoff - light.outerCutoff;
+    float theta     = dot(L, normalize(-light.direction.xyz));
+    float epsilon   = light.cutoffs.x - light.cutoffs.y;
 
-    // smoothstep between inner and outer cone edges
-    // inside inner cone = full intensity
-    // between inner/outer = soft falloff
-    // outside outer cone = no light
-    float coneIntensity = clamp((theta - light.outerCutoff) / epsilon, 0.0, 1.0);
-
-    vec3 radiance = light.color * light.intensity * attenuation * coneIntensity;
+    float coneIntensity = clamp((theta - light.cutoffs.y) / epsilon, 0.0, 1.0);
+    vec3  radiance      = light.color.xyz * light.params.x * attenuation * coneIntensity;
 
     return CalcPBR(L, radiance, N, V, albedo, roughness, metallic);
 }
@@ -176,27 +164,30 @@ void main()
     vec3 Lo = vec3(0.0);
 
     // directional
-    vec3 L        = normalize(-uDirLight.direction);
-    vec3 radiance = uDirLight.color * uDirLight.intensity;
-    Lo += CalcPBR(L, radiance, N, V, albedo, roughness, metallic);
+    if (uCounts.z == 1)
+    {
+        vec3 L        = normalize(-uDir.direction.xyz);
+        vec3 radiance = uDir.color.xyz * uDir.params.x;
+        Lo += CalcPBR(L, radiance, N, V, albedo, roughness, metallic);
+    }
 
     // point lights
-    for (int i = 0; i < uPointLightCount; i++)
+    for (int i = 0; i < uCounts.x; i++)
     {
-        vec3  lightDir    = uPointLights[i].position - fFragPos;
+        vec3  lightDir    = uPoints[i].position.xyz - fFragPos;
         float dist        = length(lightDir);
-        float attenuation = 1.0 / (uPointLights[i].constant
-                          + uPointLights[i].linear    * dist
-                          + uPointLights[i].quadratic * dist * dist);
+        float attenuation = 1.0 / (uPoints[i].params.y
+        + uPoints[i].params.z * dist
+        + uPoints[i].params.w * dist * dist);
 
         vec3 Lp        = normalize(lightDir);
-        vec3 radianceP = uPointLights[i].color * uPointLights[i].intensity * attenuation;
+        vec3 radianceP = uPoints[i].color.xyz * uPoints[i].params.x * attenuation;
         Lo += CalcPBR(Lp, radianceP, N, V, albedo, roughness, metallic);
     }
 
     // spotlights
-    for (int i = 0; i < uSpotLightCount; i++)
-        Lo += CalcSpotLight(uSpotLights[i], N, V, albedo, roughness, metallic);
+    for (int i = 0; i < uCounts.y; i++)
+    Lo += CalcSpotLight(uSpots[i], N, V, albedo, roughness, metallic);
 
     vec3 F0      = mix(vec3(0.04), albedo, metallic);
     vec3 ambient = vec3(0.03) * mix(albedo, F0, metallic) * ao;

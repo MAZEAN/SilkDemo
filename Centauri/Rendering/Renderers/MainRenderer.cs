@@ -6,11 +6,10 @@ using System.Numerics;
 using Config;
 using World;
 using Resources;
-using Systems;
 using Utils.Misc;
 using Geometry;
 
-public class MainRenderer
+public class MainRenderer : IDisposable
 {
     private readonly GL _gl;
     private readonly AppConfig _config;
@@ -20,11 +19,20 @@ public class MainRenderer
 
     private uint[] _boundTextures = null!;
 
+    // shader-group batching cache — rebuilt when the scene's entity set changes  (#2)
+    private readonly Dictionary<GLShader, List<Entity>> _shaderGroups = new();
+    private int _groupsRevision = -1;
+
+    // all lights live in one std140 UBO shared by every lit shader  (#3)
+    private readonly LightBuffer _lightBuffer;
+    private readonly HashSet<GLShader> _lightBlockBound = new();
+
     public MainRenderer(GL gl, AppConfig config)
     {
         _gl = gl;
         _config = config;
-        
+
+        _lightBuffer = new LightBuffer(gl);
         InitializeTextureCache();
     }
 
@@ -41,16 +49,19 @@ public class MainRenderer
         ResetFrameStats(scene, ref stats);
 
         scene.Lighting.Collect(scene.Entities);
+        _lightBuffer.Update(scene.Lighting);
 
-        foreach (var (shader, entities) in scene.GetEntitiesByShader())
+        foreach (var (shader, entities) in GetGroups(scene))
         {
             shader.Use();
+            
+            if (_lightBlockBound.Add(shader))
+                shader.BindUniformBlock("Lights", LightBuffer.BindingPoint);
 
             shader.SetUniform("uView",      view);
             shader.SetUniform("uCameraPos", cameraPosition);
 
             UploadGlobalUniforms(shader, viewCamera);
-            UploadLighting(shader, scene.Lighting);
 
             foreach (var entity in entities)
             {
@@ -89,6 +100,35 @@ public class MainRenderer
             stats.TotalIndices += (int) mesh.IndexCount;
             stats.TotalVertices += (int) mesh.VertexCount;
         }
+    }
+    
+    private IReadOnlyDictionary<GLShader, List<Entity>> GetGroups(Scene scene)
+    {
+        if (scene.Revision == _groupsRevision)
+            return _shaderGroups;
+
+        _shaderGroups.Clear();
+
+        foreach (var entity in scene.Entities)
+        {
+            if (entity.Material is not { } material)   // light-only / mesh-less entities
+                continue;
+
+            if (!_shaderGroups.TryGetValue(material.Shader, out var list))
+            {
+                list = new List<Entity>();
+                _shaderGroups[material.Shader] = list;
+            }
+
+            list.Add(entity);
+        }
+
+        // sort each group by material so texture binds are minimized
+        foreach (var list in _shaderGroups.Values)
+            list.Sort((a, b) => a.Material!.SortKey.CompareTo(b.Material!.SortKey));
+
+        _groupsRevision = scene.Revision;
+        return _shaderGroups;
     }
     
     // -----------------------------
@@ -177,61 +217,6 @@ public class MainRenderer
     // -----------------------------
     // Lighting
     // -----------------------------
-    private static void UploadLighting(GLShader shader, LightingSystem lights)
-    {
-        UploadDirectionalLight(shader, lights);
-        UploadPointLights(shader, lights);
-        UploadSpotLights(shader, lights);
-    }
-
-    private static void UploadDirectionalLight(GLShader shader, LightingSystem lights)
-    {
-        if (lights.DirectionalLights.Count == 0)
-            return;
-
-        var dir = lights.DirectionalLights[0];
-        shader.SetUniform("uDirLight.direction", dir.Direction);
-        shader.SetUniform("uDirLight.color",     dir.Color);
-        shader.SetUniform("uDirLight.intensity", dir.Intensity);
-    }
-
-    private static void UploadPointLights(GLShader shader, LightingSystem lights)
-    {
-        var count = Math.Min(lights.PointLights.Count, MaxPointLights);
-        shader.SetUniform("uPointLightCount", count);
-
-        for (var i = 0; i < count; i++)
-        {
-            var active = lights.PointLights[i];
-            var light  = active.Light;
-
-            shader.SetUniform($"uPointLights[{i}].position",  active.Position);
-            shader.SetUniform($"uPointLights[{i}].color",     light.Color);
-            shader.SetUniform($"uPointLights[{i}].intensity", light.Intensity);
-            shader.SetUniform($"uPointLights[{i}].constant",  light.Constant);
-            shader.SetUniform($"uPointLights[{i}].linear",    light.Linear);
-            shader.SetUniform($"uPointLights[{i}].quadratic", light.Quadratic);
-        }
-    }
-
-    private static void UploadSpotLights(GLShader shader, LightingSystem lights)
-    {
-        var count = Math.Min(lights.SpotLights.Count, MaxSpotLights);
-        shader.SetUniform("uSpotLightCount", count);
-
-        for (var i = 0; i < count; i++)
-        {
-            var active = lights.SpotLights[i];
-            var light  = active.Light;
-
-            shader.SetUniform($"uSpotLights[{i}].position",    active.Position);
-            shader.SetUniform($"uSpotLights[{i}].direction",   light.Direction);
-            shader.SetUniform($"uSpotLights[{i}].color",       light.Color);
-            shader.SetUniform($"uSpotLights[{i}].intensity",   light.Intensity);
-            shader.SetUniform($"uSpotLights[{i}].innerCutoff", MathF.Cos(light.InnerCutoff * MathF.PI / 180f));
-            shader.SetUniform($"uSpotLights[{i}].outerCutoff", MathF.Cos(light.OuterCutoff * MathF.PI / 180f));
-        }
-    }
 
     private void InitializeTextureCache()
     {
@@ -250,4 +235,6 @@ public class MainRenderer
         stats.TotalIndices   = 0;
         stats.TotalVertices  = 0;
     }
+    
+    public void Dispose() => _lightBuffer.Dispose();
 }

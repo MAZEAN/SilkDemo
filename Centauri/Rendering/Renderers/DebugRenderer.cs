@@ -5,7 +5,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 
 using World;
-using Utils.Geometry;
 using Config;
 
 public sealed class DebugRenderer : IDisposable
@@ -19,12 +18,12 @@ public sealed class DebugRenderer : IDisposable
     private const float DirLineLength = 100.0f;
     private const float FaceAlpha     = 0.05f; // translucency of AABB side faces
 
-    private static readonly Vector3 ColorCamera     = new(1.0f, 0.5f, 0.0f);
-    private static readonly Vector3 ColorDir        = new(1.0f, 1.0f, 1.0f);
-    private static readonly Vector3 ColorFrustum    = new(1.0f, 1.0f, 0.0f);
-    private static readonly Vector3 ColorAABB       = new(0.0f, 1.0f, 0.0f);
-    private static readonly Vector3 ColorAABBCulled = new(1.0f, 0.0f, 0.0f);
-    private static readonly Vector3 ColorSelected = new(1.0f, 1.0f, 1.0f);
+    private static readonly Vector3 CameraColor     = new(1.0f, 0.5f, 0.0f);
+    private static readonly Vector3 DirColor        = new(1.0f, 1.0f, 1.0f);
+    private static readonly Vector3 FrustumColor    = new(1.0f, 1.0f, 0.0f);
+    private static readonly Vector3 AABBColor       = new(0.0f, 1.0f, 0.0f);
+    private static readonly Vector3 AABBCulledColor = new(1.0f, 0.0f, 0.0f);
+    private static readonly Vector3 SelectedColor   = new(1.0f, 1.0f, 1.0f);
 
     public DebugRenderer(GL gl, AppConfig config)
     {
@@ -84,12 +83,12 @@ public sealed class DebugRenderer : IDisposable
             var bounds  = entity.GetWorldBounds();
             var culled  = !cullingFrustum.IsVisibleAABB(bounds);
             var corners = bounds.GetBoxCorners();
-            var color   = culled ? ColorAABBCulled : ColorAABB;
+            var color   = culled ? AABBCulledColor : AABBColor;
 
             _draw.Color(color, FaceAlpha);          // translucent fill
             _draw.Triangles(DebugShapes.BoxFaces(corners));
 
-            _draw.Color(color, 1.0f);               // opaque wireframe on top
+            _draw.Color(color);
             _draw.Lines(DebugShapes.BoxEdges(corners));
         }
     }
@@ -100,7 +99,7 @@ public sealed class DebugRenderer : IDisposable
         if (scene.Selected is not { } e || e.Model is null) return;
 
         _draw.Model(Matrix4x4.Identity);
-        _draw.Color(ColorSelected, 1.0f);
+        _draw.Color(SelectedColor);
         _draw.Lines(DebugShapes.BoxEdges(e.GetWorldBounds().GetBoxCorners()));
     }
 
@@ -112,14 +111,14 @@ public sealed class DebugRenderer : IDisposable
             Matrix4x4.CreateWorld(cam.Position, cam.Forward, cam.Up);
 
         _draw.Model(model);
-        _draw.Color(ColorCamera);
+        _draw.Color(CameraColor);
         _draw.DrawMesh(_cameraMesh);
     }
 
     private void DrawDirectionLine(Camera cam)
     {
         _draw.Model(Matrix4x4.Identity);
-        _draw.Color(ColorDir);
+        _draw.Color(DirColor);
 
         var tipOffset = MathF.Abs(DebugShapes.CameraModelBase) * DebugShapes.CameraScale;
         var start     = cam.Position + cam.Forward * tipOffset;
@@ -131,7 +130,7 @@ public sealed class DebugRenderer : IDisposable
     private void DrawFrustum(Camera cam)
     {
         _draw.Model(Matrix4x4.Identity);
-        _draw.Color(ColorFrustum);
+        _draw.Color(FrustumColor);
         _draw.Lines(DebugShapes.BoxEdges(cam.Frustum.GetFrustumCorners()));
     }
 

@@ -11,9 +11,8 @@ public class Scene
 {
     private readonly List<Entity> _entities = new();
     public IReadOnlyList<Entity> Entities => _entities;
-    private readonly Dictionary<GLShader, List<Entity>> _shaderGroups = new();
     
-    private bool _shaderGroupsDirty = true;
+    public int Revision { get; private set; }
     
     public LightingSystem Lighting { get; } = new();
     
@@ -27,48 +26,10 @@ public class Scene
     public void Select(Entity? entity) => Selected = entity;
     public void ClearSelection() => Selected = null;
 
-    public IReadOnlyDictionary<GLShader, List<Entity>> GetEntitiesByShader()
-    {
-        if (!_shaderGroupsDirty)
-            return _shaderGroups;
-
-        _shaderGroups.Clear();
-
-        foreach (var entity in _entities)
-        {
-            if (entity.Material is not { } material)   // light-only / mesh-less entities
-                continue;
-
-            var shader = material.Shader;
-
-            if (!_shaderGroups.TryGetValue(shader, out var list))
-            {
-                list = new List<Entity>();
-                _shaderGroups[shader] = list;
-            }
-
-            list.Add(entity);
-        }
-
-        // sort per shader group
-        foreach (var list in _shaderGroups.Values)
-        {
-            list.Sort((a, b) =>
-            {
-                Debug.Assert(a.Material != null);
-                Debug.Assert(b.Material != null);
-                return a.Material.SortKey.CompareTo(b.Material.SortKey);
-            });
-        }
-
-        _shaderGroupsDirty = false;
-        return _shaderGroups;
-    }
-
     public void AddEntity(Entity entity)
     {
         _entities.Add(entity);
-        _shaderGroupsDirty = true;
+        Revision++;
     }
 
     public void RemoveEntity(Entity entity)
@@ -78,7 +39,7 @@ public class Scene
         if (Selected == entity)        // keep selection valid
             Selected = null;
 
-        _shaderGroupsDirty = true;
+        Revision++;
     }
 
     public void InitializeCameras(IWindow window)
@@ -167,7 +128,6 @@ public class Scene
             entity.Dispose();
 
         _entities.Clear();
-        _shaderGroups.Clear();
         _cameras.Clear();
         _cameraLookup.Clear();
     }

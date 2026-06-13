@@ -141,6 +141,14 @@ public class GLShader : IDisposable
         fixed (float* ptr = mat3)
             _gl.UniformMatrix3(location, 1, false, ptr);
     }
+    
+    public void BindUniformBlock(string blockName, uint bindingPoint)
+    {
+        var index = _gl.GetUniformBlockIndex(_handle, blockName);
+        if (index == uint.MaxValue) return; // GL_INVALID_INDEX
+
+        _gl.UniformBlockBinding(_handle, index, bindingPoint);
+    }
 
     private int GetLocation(string name)
     {

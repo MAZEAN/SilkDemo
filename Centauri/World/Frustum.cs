@@ -1,11 +1,11 @@
-namespace Centauri.Utils.Geometry;
+namespace Centauri.World;
 
 using System.Numerics;
 using Plane = System.Numerics.Plane;
 
-using Math;
+using Utils.Math;
+using Utils.Geometry;
 using Config;
-using World;
 
 public class Frustum
 {

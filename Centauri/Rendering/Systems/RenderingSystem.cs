@@ -14,7 +14,7 @@ public class RenderingSystem : IDisposable
 {
     private readonly GL            _gl;
     private readonly AppConfig     _config;
-    private readonly MainRenderer  _renderer;
+    private readonly MainRenderer  _mainRenderer;
     private readonly GridRenderer  _gridRenderer;
     private readonly DebugRenderer _debugRenderer;
 
@@ -33,7 +33,7 @@ public class RenderingSystem : IDisposable
     {
         _gl            = gl;
         _config        = config;
-        _renderer      = new MainRenderer(gl, config);
+        _mainRenderer      = new MainRenderer(gl, config);
         _gridRenderer  = new GridRenderer(gl);
         _debugRenderer = new DebugRenderer(gl, config);
     }
@@ -73,7 +73,7 @@ public class RenderingSystem : IDisposable
         if (_config.Debug.ShowGrid)
             _gridRenderer.Render(scene);
         
-        _renderer.Render(scene, (float)deltaTime, ref _stats);
+        _mainRenderer.Render(scene, (float)deltaTime, ref _stats);
 
         if (_config.Debug.ShowDebugView)
         {
@@ -83,18 +83,12 @@ public class RenderingSystem : IDisposable
             _debugRenderer.Begin(active);
             _debugRenderer.DrawCameras(scene);
             _debugRenderer.DrawAllAABBs(scene, cullingCamera.Frustum);
+            _debugRenderer.DrawSelection(scene);
             _debugRenderer.End();
         }
         
         if (_config.Debug.ShowStatsOverlay)
             _statsOverlay.Render(scene, _stats);
-        
-        if (scene.Selected is not null)
-        {
-            _debugRenderer.Begin(scene.GetActiveCamera());
-            _debugRenderer.DrawSelection(scene);
-            _debugRenderer.End();
-        }
         
         _imGui?.Render();
     }
@@ -103,6 +97,7 @@ public class RenderingSystem : IDisposable
     {
         _imGui?.Dispose();
         _gridRenderer.Dispose();
+        _mainRenderer.Dispose();
         _debugRenderer.Dispose();
     }
 }
