@@ -8,8 +8,8 @@ using World;
 public class InspectorPanel
 {
     private const float Width   = 300f;
-    private const float Height  = 400f;
     private const float Padding = 10f;
+    private const float BgAlpha = 0.85f;
 
     private static readonly string[] LightTypes = ["None", "Directional", "Point", "Spot"];
 
@@ -17,6 +17,11 @@ public class InspectorPanel
 
     private Entity? _tracked;
     private Vector3 _euler;   // cached working rotation (deg) for the selected entity
+    
+    private const ImGuiWindowFlags Flags = ImGuiWindowFlags.NoMove          |
+                                           ImGuiWindowFlags.NoCollapse      |
+                                           ImGuiWindowFlags.NoSavedSettings |
+                                           ImGuiWindowFlags.AlwaysAutoResize;
 
     public InspectorPanel(ImFontPtr font) => _font = font;
 
@@ -24,7 +29,7 @@ public class InspectorPanel
     {
         SetupWindow();
 
-        if (!ImGui.Begin("Inspector"))
+        if (!ImGui.Begin("Inspector", Flags))
         {
             ImGui.End();
             return;
@@ -58,24 +63,27 @@ public class InspectorPanel
 
     private static void SetupWindow()
     {
-        var vp = ImGui.GetMainViewport();
-        ImGui.SetNextWindowPos(
-            new Vector2(vp.WorkPos.X + Padding, vp.WorkPos.Y + Padding), ImGuiCond.FirstUseEver);
-        ImGui.SetNextWindowSize(new Vector2(Width, Height), ImGuiCond.FirstUseEver);
-        ImGui.SetNextWindowCollapsed(false, ImGuiCond.FirstUseEver);
+        var viewport = ImGui.GetMainViewport();
+        var anchor = new Vector2(viewport.WorkPos.X + viewport.WorkSize.X - Padding, viewport.WorkPos.Y + Padding);
+        
+        ImGui.SetNextWindowPos(anchor, ImGuiCond.Always, new Vector2(1f, 0f)); 
+        ImGui.SetNextWindowSizeConstraints(
+            new Vector2(Width, 0),
+            new Vector2(Width, float.MaxValue));
+        ImGui.SetNextWindowBgAlpha(BgAlpha);
     }
 
     private void DrawTransform(Entity e)
     {
-       GUI.SectionTitle("Transform",GUI.Amber);
+        GUI.SectionTitle("Transform",GUI.Amber);
 
         var t = e.Transform;
-       GUI.Drag3("Position", t.Position, v => t.Position = v);
+        GUI.Drag3("Position", t.Position, v => t.Position = v);
 
         if (ImGui.DragFloat3("Rotation", ref _euler, 0.5f))   // cached euler (pitch, yaw, roll)
             t.SetEulerAngles(_euler.X, _euler.Y, _euler.Z);
 
-       GUI.Drag3("Scale", t.Scale, v => t.Scale = v);
+        GUI.Drag3("Scale", t.Scale, v => t.Scale = v);
         ImGui.Spacing();
     }
 
@@ -83,16 +91,16 @@ public class InspectorPanel
     {
         if (e.Material is not { } mat) return;
 
-       GUI.SectionTitle("Material",GUI.Blue);
-       GUI.Color4("Color",     mat.Color,          v => mat.Color          = v);
-       GUI.Slider("Roughness", mat.RoughnessValue, v => mat.RoughnessValue = v, 0f, 1f); // lower = shinier
-       GUI.Slider("Metallic",  mat.MetallicValue,  v => mat.MetallicValue  = v, 0f, 1f);
+        GUI.SectionTitle("Material",GUI.Blue);
+        GUI.Color4("Color", mat.Color, v => mat.Color = v);
+        GUI.Slider("Roughness", mat.RoughnessValue, v => mat.RoughnessValue = v, 0f, 1f); // lower = shinier
+        GUI.Slider("Metallic",  mat.MetallicValue,  v => mat.MetallicValue  = v, 0f, 1f);
         ImGui.Spacing();
     }
 
     private static void DrawLight(Entity e)
     {
-       GUI.SectionTitle("Light",GUI.Green);
+        GUI.SectionTitle("Light",GUI.Green);
 
         var typeIndex = e.Light switch
         {
@@ -108,9 +116,9 @@ public class InspectorPanel
 
         if (e.Light is not { } light) return;
 
-       GUI.Check("Light Enabled", light.Enabled,   v => light.Enabled   = v);
-       GUI.Color3("Color##light", light.Color,     v => light.Color     = v);
-       GUI.Drag("Intensity",      light.Intensity, v => light.Intensity = v, 0.05f, 0f, 100f);
+        GUI.Check("Light Enabled", light.Enabled, v => light.Enabled = v);
+        GUI.Color3("Color##light", light.Color, v => light.Color = v);
+        GUI.Drag("Intensity", light.Intensity, v => light.Intensity = v, 0.05f, 0f, 100f);
 
         switch (light)
         {
@@ -118,13 +126,13 @@ public class InspectorPanel
                 GUI.Drag3("Direction", d.Direction, v => d.Direction = v, 0.01f);
                 break;
             case SpotLight s:
-               GUI.Drag3("Direction",   s.Direction,   v => s.Direction   = v, 0.01f);
-               GUI.Drag("Inner Cutoff", s.InnerCutoff, v => s.InnerCutoff = v, 0.5f, 0f, 90f);
-               GUI.Drag("Outer Cutoff", s.OuterCutoff, v => s.OuterCutoff = v, 0.5f, 0f, 90f);
+                GUI.Drag3("Direction", s.Direction, v => s.Direction = v, 0.01f);
+                GUI.Drag("Inner Cutoff", s.InnerCutoff, v => s.InnerCutoff = v, 0.5f, 0f, 90f);
+                GUI.Drag("Outer Cutoff", s.OuterCutoff, v => s.OuterCutoff = v, 0.5f, 0f, 90f);
                 break;
             case PointLight p:
-               GUI.Drag("Linear",    p.Linear,    v => p.Linear    = v, 0.001f, 0f, 1f);
-               GUI.Drag("Quadratic", p.Quadratic, v => p.Quadratic = v, 0.001f, 0f, 1f);
+                GUI.Drag("Linear",    p.Linear,    v => p.Linear    = v, 0.001f, 0f, 1f);
+                GUI.Drag("Quadratic", p.Quadratic, v => p.Quadratic = v, 0.001f, 0f, 1f);
                 break;
         }
 

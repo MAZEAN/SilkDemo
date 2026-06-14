@@ -9,11 +9,11 @@ using Config;
 
 public class StatsOverlay
 {
-    private const ImGuiWindowFlags Flags = ImGuiWindowFlags.NoDecoration          |
-                                           ImGuiWindowFlags.NoMove                |
+    private const ImGuiWindowFlags Flags = ImGuiWindowFlags.NoMove                |
                                            ImGuiWindowFlags.NoSavedSettings       |
                                            ImGuiWindowFlags.NoBringToFrontOnFocus |
                                            ImGuiWindowFlags.AlwaysAutoResize;
+                                           
 
     private const ImGuiTableFlags TableFlags = ImGuiTableFlags.SizingStretchSame |
                                                ImGuiTableFlags.BordersInnerV;
@@ -35,7 +35,7 @@ public class StatsOverlay
     {
         SetupWindow();
 
-        if (!ImGui.Begin("##StatsOverlay", Flags))
+        if (!ImGui.Begin("StatsOverlay", Flags))
         {
             ImGui.End();
             return;
@@ -74,11 +74,11 @@ public class StatsOverlay
         Section("Camera",GUI.Red, () =>
         {
             RowColored("Active", cam.Name,GUI.Amber);
-            RowColored("Position", GUI.Vec3(cam.Position),GUI.Blue);
-            RowColored("Forward", GUI.Vec3(cam.Forward),GUI.Green);
-            Row("Yaw", GUI.SignedFloat(cam.Yaw));
-            Row("Pitch",GUI.SignedFloat(cam.Pitch));
-            Row("Zoom", GUI.Float(cam.Zoom));
+            RowColored("Position", GUI.Vec3(cam.Position), GUI.Blue);
+            RowColored("Forward",  GUI.Vec3(cam.Forward),  GUI.Green);
+            Row("Yaw",   GUI.SignedFloat(cam.Yaw));
+            Row("Pitch", GUI.SignedFloat(cam.Pitch));
+            Row("Zoom",  GUI.Float(cam.Zoom));
         });
 
         Section("Config",GUI.Purple, () =>
@@ -100,11 +100,9 @@ public class StatsOverlay
     private static void SetupWindow()
     {
         var viewport = ImGui.GetMainViewport();
-        var anchor = new Vector2(
-            viewport.WorkPos.X + viewport.WorkSize.X - Padding,
-            viewport.WorkPos.Y + Padding);
+        var anchor = new Vector2(viewport.WorkPos.X + Padding, viewport.WorkPos.Y + Padding);
 
-        ImGui.SetNextWindowPos(anchor, ImGuiCond.Always, new Vector2(1f, 0f));
+        ImGui.SetNextWindowPos(anchor, ImGuiCond.Always, new Vector2(0f, 0f));
         ImGui.SetNextWindowSizeConstraints(
             new Vector2(Width, 0),
             new Vector2(Width, float.MaxValue));
